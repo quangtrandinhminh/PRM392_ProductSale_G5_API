@@ -3,7 +3,11 @@ using Repositories.Models;
 
 namespace Repositories.Repositories;
 
-public class UserRepository : GenericRepository<User>
+public interface IUserRepository : IGenericRepository<User>
+{
+}
+
+public class UserRepository : GenericRepository<User>, IUserRepository
 {
     public UserRepository()
     {

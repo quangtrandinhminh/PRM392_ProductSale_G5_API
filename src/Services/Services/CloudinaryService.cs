@@ -10,7 +10,13 @@ using Services.Exceptions;
 
 namespace Services.Services;
 
-public class CloudinaryService(IServiceProvider serviceProvider)
+public interface ICloudinaryService
+{
+    Task<string> UploadImageAsync(IFormFile file);
+    Task DeleteImageAsync(string imageUrl);
+}
+
+public class CloudinaryService(IServiceProvider serviceProvider) : ICloudinaryService
 {
     private readonly Cloudinary _cloudinary = new Cloudinary(CloudinarySetting.Instance.CloudinaryUrl);
     private readonly ILogger _logger = serviceProvider.GetRequiredService<ILogger>();

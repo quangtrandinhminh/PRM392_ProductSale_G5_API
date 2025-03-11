@@ -4,7 +4,30 @@ using Repositories.Extensions;
 using Repositories.Models;
 
 namespace Repositories.Base;
-public class GenericRepository<T> where T : class
+
+public interface IGenericRepository<T> where T : class
+{
+    IQueryable<T> Set();
+    IQueryable<T?> GetAll();
+    Task<PaginatedList<T>> GetAllPaginatedQueryable(
+               int pageNumber,
+                      int pageSize,
+                      Expression<Func<T, bool>> predicate = null,
+                      params Expression<Func<T, object>>[]? includeProperties
+                  );
+    IQueryable<T> GetAllWithCondition(Expression<Func<T, bool>> predicate = null,
+               params Expression<Func<T, object>>[] includeProperties);
+    Task<IList<T>?> GetAllAsync();
+    Task<bool> IsExistAsync(Expression<Func<T, bool>> predicate);
+    Task<T> GetSingleAsync(Expression<Func<T, bool>> predicate,
+               params Expression<Func<T, object>>[] includeProperties);
+    void Create(T entity);
+    void Update(T entity);
+    bool Remove(T entity);
+    Task<int> SaveChangeAsync();
+    int SaveChange();
+}
+public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
     protected readonly AppDbContext _context;
 

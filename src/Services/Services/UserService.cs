@@ -12,7 +12,15 @@ using Services.Mapper;
 
 namespace Services.Services;
 
-public class UserService(IServiceProvider serviceProvider)
+public interface IUserService
+{
+    Task<PaginatedListResponse<UserResponse>> GetAllUsersAsync(int pageNumber, int pageSize);
+    Task<UserResponse> GetUserByIdAsync(int id);
+    Task<int> UpdateUserAsync(UserUpdateRequest request);
+    Task<int> DeleteUserAsync(int id);
+}
+
+public class UserService(IServiceProvider serviceProvider) : IUserService
 {
     private readonly UserRepository _userRepository = serviceProvider.GetRequiredService<UserRepository>();
     private readonly ILogger _logger = serviceProvider.GetRequiredService<ILogger>();

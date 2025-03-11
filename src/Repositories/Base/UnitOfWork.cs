@@ -3,7 +3,13 @@ using Repositories.Models;
 
 namespace Repositories.Base
 {
-    public class UnitOfWork
+    public interface IUnitOfWork
+    {
+        int SaveChange();
+        Task<int> SaveChangeAsync();
+    }
+
+    public class UnitOfWork : IUnitOfWork
     {
         private readonly AppDbContext _dbContext;
         private bool disposed = false;

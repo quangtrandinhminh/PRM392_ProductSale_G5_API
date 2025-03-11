@@ -8,7 +8,12 @@ using Services.Config;
 
 namespace Services.Services
 {
-    public class EmailService(IServiceProvider serviceProvider)
+    public interface IEmailService
+    {
+        void SendMail(SendMailModel model);
+    }
+
+    public class EmailService(IServiceProvider serviceProvider) : IEmailService
     {
         private string EMAIL_SENDER = MailSettingModel.Instance.FromAddress;
         private string EMAIL_SENDER_PASSWORD = MailSettingModel.Instance.Smtp.Password;

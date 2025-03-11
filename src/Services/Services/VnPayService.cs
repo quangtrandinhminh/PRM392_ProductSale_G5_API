@@ -11,7 +11,13 @@ using Services.Helper;
 
 namespace Services.Services;
 
-public class VnPayService(IServiceProvider serviceProvider)
+public interface IVnPayService
+{
+    Task<string> CreatePaymentUrl(HttpContext context, VnPaymentRequest request);
+    Task<VnPaymentResponse> PaymentExecute(HttpContext context, int orderId);
+}
+
+public class VnPayService(IServiceProvider serviceProvider) : IVnPayService
 {
     private readonly VnPaySetting _vnpaySetting = VnPaySetting.Instance;
     private readonly GenericRepository<Order> _orderRepository = serviceProvider.GetRequiredService<GenericRepository<Order>>();
@@ -35,7 +41,7 @@ public class VnPayService(IServiceProvider serviceProvider)
 
         vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
         vnpay.AddRequestData("vnp_CurrCode", _vnpaySetting.CurrCode);
-        vnpay.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(context));
+        vnpay.AddRequestData("vnp_IpAddr", Helper.Utils.GetIpAddress(context));
         vnpay.AddRequestData("vnp_Locale", _vnpaySetting.Locale);
 
         vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan hoa don " + request.OrderId);
