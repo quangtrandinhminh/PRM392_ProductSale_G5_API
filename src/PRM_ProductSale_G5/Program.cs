@@ -20,9 +20,12 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseSwaggerDocumentation();
+
+app.UseCors();
+
 app.UseApplicationMiddleware();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

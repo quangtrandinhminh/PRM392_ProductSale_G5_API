@@ -80,10 +80,8 @@ public class AuthService(IServiceProvider serviceProvider) : IAuthService
         claims.AddRange(new[]
         {
             new Claim(ClaimTypes.Sid, loggedUser.UserId.ToString()),
-            new Claim(ClaimTypes.Name, loggedUser.Username ?? string.Empty),
             new Claim(ClaimTypes.Role, loggedUser.Role ?? string.Empty),
-            new Claim(ClaimTypes.Email, loggedUser.Email ?? string.Empty),
-            new Claim(ClaimTypes.MobilePhone, loggedUser.PhoneNumber ?? string.Empty),
+            new Claim(ClaimTypes.Name, loggedUser.Username),
             new Claim(ClaimTypes.Expired, DateTime.Now.AddHours(hour).Date.ToShortDateString())
         });
 
