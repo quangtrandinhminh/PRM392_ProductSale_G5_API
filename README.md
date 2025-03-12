@@ -1,6 +1,6 @@
 ## Getting Started
 
-To get started with this project, follow these steps:
+This project needs to add an .env file into the API project before running
 
 ### Prerequisites
 
@@ -80,7 +80,6 @@ Use built-in continuous integration and continuous deployment (CI/CD) pipelines 
 
 If you need help, you can reach out via:
 
-- [Issue Tracker](https://github.com/quangtrandinhminh/RentEZ.API/issues)
 - [Email]()
 
 ## Contributing
