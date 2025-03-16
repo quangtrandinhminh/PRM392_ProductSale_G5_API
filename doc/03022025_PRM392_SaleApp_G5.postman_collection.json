@@ -10,6 +10,24 @@
 			"name": "Auth",
 			"item": [
 				{
+					"name": "Hello",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/hello",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"hello"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Login",
 					"request": {
 						"method": "POST",
@@ -174,12 +192,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/chat-messages?pageNumber=1&pageSize=10",
+							"raw": "{{baseUrl}}/chat-messages?pageNumber=1&pageSize=10",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"chat-messages"
 							],
 							"query": [
@@ -208,14 +225,13 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/chat-messages/users/{{otherUserId}}?pageNumber=1&pageSize=10",
+							"raw": "{{baseUrl}}/chat-messages/conversation/{{otherUserId}}?pageNumber=1&pageSize=10",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"chat-messages",
-								"users",
+								"conversation",
 								"{{otherUserId}}"
 							],
 							"query": [
@@ -244,12 +260,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/chat-messages/{{messageId}}",
+							"raw": "{{baseUrl}}/chat-messages/{{messageId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"chat-messages",
 								"{{messageId}}"
 							]
@@ -275,15 +290,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"receiverId\": {{otherUserId}},\r\n  \"message\": \"Xin chào, đây là tin nhắn test\"\r\n}"
+							"raw": "{\r\n  \"userId\": {{otherUserId}},\r\n  \"message\": \"Xin chào, đây là tin nhắn test\"\r\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/chat-messages",
+							"raw": "{{baseUrl}}/chat-messages",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"chat-messages"
 							]
 						}
@@ -311,12 +325,11 @@
 							"raw": "{\r\n  \"chatMessageId\": {{messageId}},\r\n  \"message\": \"Tin nhắn đã được cập nhật\"\r\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/chat-messages",
+							"raw": "{{baseUrl}}/chat-messages",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"chat-messages"
 							]
 						}
@@ -335,12 +348,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/chat-messages/{{messageId}}",
+							"raw": "{{baseUrl}}/chat-messages/{{messageId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"chat-messages",
 								"{{messageId}}"
 							]
@@ -360,12 +372,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/chat-messages/unread-count",
+							"raw": "{{baseUrl}}/chat-messages/unread-count",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"chat-messages",
 								"unread-count"
 							]
@@ -385,12 +396,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/chat-messages/{{messageId}}/read",
+							"raw": "{{baseUrl}}/chat-messages/{{messageId}}/read",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"chat-messages",
 								"{{messageId}}",
 								"read"
@@ -416,12 +426,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/notifications?pageNumber=1&pageSize=10",
+							"raw": "{{baseUrl}}/notifications?pageNumber=1&pageSize=10",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"notifications"
 							],
 							"query": [
@@ -450,12 +459,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/notifications/{{notificationId}}",
+							"raw": "{{baseUrl}}/notifications/{{notificationId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"notifications",
 								"{{notificationId}}"
 							]
@@ -484,12 +492,11 @@
 							"raw": "{\r\n  \"userId\": {{userId}},\r\n  \"message\": \"Thông báo test từ Admin\"\r\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/notifications",
+							"raw": "{{baseUrl}}/notifications",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"notifications"
 							]
 						}
@@ -517,12 +524,11 @@
 							"raw": "5"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/notifications/cart",
+							"raw": "{{baseUrl}}/notifications/cart",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"notifications",
 								"cart"
 							]
@@ -551,12 +557,11 @@
 							"raw": "{\r\n  \"notificationId\": {{notificationId}},\r\n  \"message\": \"Thông báo đã được cập nhật\"\r\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/notifications",
+							"raw": "{{baseUrl}}/notifications",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"notifications"
 							]
 						}
@@ -575,12 +580,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/notifications/{{notificationId}}",
+							"raw": "{{baseUrl}}/notifications/{{notificationId}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"notifications",
 								"{{notificationId}}"
 							]
@@ -600,12 +604,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/notifications/unread-count",
+							"raw": "{{baseUrl}}/notifications/unread-count",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"notifications",
 								"unread-count"
 							]
@@ -625,12 +628,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/notifications/{{notificationId}}/read",
+							"raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"notifications",
 								"{{notificationId}}",
 								"read"
@@ -651,12 +653,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/notifications/read-all",
+							"raw": "{{baseUrl}}/notifications/read-all",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"notifications",
 								"read-all"
 							]
@@ -690,12 +691,11 @@
 							"raw": "{\r\n  \"deviceToken\": \"fcm_token_{{$timestamp}}\",\r\n  \"deviceType\": \"Android\"\r\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/user-devices/register",
+							"raw": "{{baseUrl}}/user-devices/register",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"user-devices",
 								"register"
 							]
@@ -715,12 +715,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/user-devices/unregister?deviceToken={{deviceToken}}",
+							"raw": "{{baseUrl}}/user-devices/unregister?deviceToken={{deviceToken}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"user-devices",
 								"unregister"
 							],
@@ -746,12 +745,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/user-devices",
+							"raw": "{{baseUrl}}/user-devices",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"user-devices"
 							]
 						}
@@ -786,7 +784,7 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:5288",
+			"value": "http://localhost:5288/api",
 			"type": "string"
 		},
 		{

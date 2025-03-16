@@ -16,6 +16,8 @@ public partial class ChatMessage
     public string Message { get; set; }
 
     public DateTime SentAt { get; set; }
+    
+    public bool IsRead { get; set; }
 
     public virtual User User { get; set; }
 }

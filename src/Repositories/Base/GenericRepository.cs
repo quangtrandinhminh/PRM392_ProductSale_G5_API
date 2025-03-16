@@ -148,8 +148,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public void Update(T entity)
     {
-        var tracker = _context.Attach(entity);
-        tracker.State = EntityState.Modified;
+        _context.Set<T>().Update(entity);
     }
 
     public bool Remove(T entity)

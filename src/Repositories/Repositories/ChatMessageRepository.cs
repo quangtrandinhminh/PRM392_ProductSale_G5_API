@@ -47,19 +47,22 @@ public class ChatMessageRepository : GenericRepository<ChatMessage>, IChatMessag
     
     public async Task<int> GetUnreadCountAsync(int userId)
     {
-        // Giả sử chúng ta có thêm trường IsRead trong ChatMessage
-        // Nếu không, cần thêm trường này vào database
         return await _context.ChatMessages
-            .CountAsync(m => m.UserId == userId);
+            .CountAsync(m => m.UserId == userId && !m.IsRead);
     }
     
     public async Task<bool> MarkAsReadAsync(int chatMessageId)
     {
-        var message = await _context.ChatMessages.FindAsync(chatMessageId);
+        var message = await _context.ChatMessages
+            .AsTracking()
+            .FirstOrDefaultAsync(m => m.ChatMessageId == chatMessageId);
+        
         if (message == null) return false;
         
-        // Giả sử chúng ta có thêm trường IsRead trong ChatMessage
-        // message.IsRead = true;
+        message.IsRead = true;
+        
+        _context.Entry(message).State = EntityState.Modified;
+        
         await _context.SaveChangesAsync();
         return true;
     }

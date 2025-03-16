@@ -41,28 +41,25 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
     
     public async Task<bool> MarkAsReadAsync(int notificationId)
     {
-        var notification = await _context.Notifications.FindAsync(notificationId);
+        var notification = await _context.Notifications
+            .AsTracking()
+            .FirstOrDefaultAsync(n => n.NotificationId == notificationId);
+        
         if (notification == null) return false;
         
         notification.IsRead = true;
+        
+        _context.Entry(notification).State = EntityState.Modified;
+        
         await _context.SaveChangesAsync();
         return true;
     }
     
     public async Task<bool> MarkAllAsReadAsync(int userId)
     {
-        var notifications = await _context.Notifications
-            .Where(n => n.UserId == userId && !n.IsRead)
-            .ToListAsync();
-            
-        if (!notifications.Any()) return false;
+        var result = await _context.Database.ExecuteSqlRawAsync(
+            "UPDATE Notifications SET IsRead = 1 WHERE UserId = {0} AND IsRead = 0", userId);
         
-        foreach (var notification in notifications)
-        {
-            notification.IsRead = true;
-        }
-        
-        await _context.SaveChangesAsync();
-        return true;
+        return result > 0;
     }
 }
