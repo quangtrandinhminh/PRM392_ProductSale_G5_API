@@ -200,3 +200,23 @@ VALUES
 ( 8, 8, 'Credit Card', '606 Spruce St', 'Shipped', GETDATE()),
 ( 9, 9, 'PayPal', '707 Willow St', 'Pending', GETDATE()),
 ( 10, 10, 'Debit Card', '808 Redwood St', 'Delivered', GETDATE());
+
+
+-- Tạo bảng UserDevices để lưu thông tin thiết bị của người dùng
+CREATE TABLE [dbo].[UserDevices] (
+    [UserDeviceId] INT IDENTITY(1,1) NOT NULL,
+    [UserId] INT NULL,
+    [DeviceToken] NVARCHAR(255) NOT NULL, 
+    [DeviceType] NVARCHAR(50) NOT NULL,
+    [LastUsed] DATETIME DEFAULT GETDATE() NOT NULL,
+    CONSTRAINT [PK_UserDevices] PRIMARY KEY CLUSTERED ([UserDeviceId] ASC),
+    CONSTRAINT [FK_UserDevices_Users] FOREIGN KEY ([UserId]) REFERENCES [dbo].[Users] ([UserId])
+);
+
+-- Tạo unique index cho cặp UserId và DeviceToken
+CREATE UNIQUE INDEX [IX_UserDevices_UserId_DeviceToken] 
+ON [dbo].[UserDevices] ([UserId], [DeviceToken]) 
+WHERE [UserId] IS NOT NULL;
+
+ALTER TABLE ChatMessages
+ADD IsRead BIT NOT NULL DEFAULT 0;
