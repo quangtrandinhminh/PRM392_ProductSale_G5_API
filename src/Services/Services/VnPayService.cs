@@ -118,7 +118,7 @@ public class VnPayService(IServiceProvider serviceProvider) : IVnPayService
 
     private async Task<Order> GetOrderById(int orderId)
     {
-        var order = await _orderRepository.GetSingleAsync(x => x.OrderId == orderId);
+        var order = await _orderRepository.GetSingleAsync(x => x.OrderId == orderId, x => x.Cart);
         if (order == null)
         {
             throw new AppException(ResponseCodeConstants.NOT_FOUND, ResponseMessageConstrantsOrder.NOT_FOUND, StatusCodes.Status404NotFound);

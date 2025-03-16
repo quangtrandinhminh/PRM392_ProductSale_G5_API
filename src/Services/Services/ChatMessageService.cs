@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Repositories.Extensions;
-using Repositories.Models;
 using Repositories.Repositories;
 using Serilog;
 using Service.Utils;
-using Services.ApiModels;
 using Services.ApiModels.Chat;
 using Services.ApiModels.PaginatedList;
 using Services.Constants;
@@ -62,7 +59,7 @@ public class ChatMessageService : IChatMessageService
         if (message == null)
         {
             throw new AppException(ResponseCodeConstants.BAD_REQUEST, 
-                "Không tìm thấy tin nhắn", StatusCodes.Status404NotFound);
+                ResponseMessageConstraintsChat.NOT_FOUND, StatusCodes.Status404NotFound);
         }
         
         return _mapper.Map(message);
@@ -88,8 +85,8 @@ public class ChatMessageService : IChatMessageService
         var message = await _chatMessageRepository.GetSingleAsync(x => x.ChatMessageId == request.ChatMessageId);
         if (message == null)
         {
-            throw new AppException(ResponseCodeConstants.BAD_REQUEST, 
-                "Không tìm thấy tin nhắn", StatusCodes.Status404NotFound);
+            throw new AppException(ResponseCodeConstants.BAD_REQUEST,
+                ResponseMessageConstraintsChat.NOT_FOUND, StatusCodes.Status404NotFound);
         }
         
         // Kiểm tra quyền chỉnh sửa
@@ -99,7 +96,7 @@ public class ChatMessageService : IChatMessageService
         if (message.UserId != currentUserId)
         {
             throw new AppException(ResponseCodeConstants.FORBIDDEN, 
-                "Bạn không có quyền chỉnh sửa tin nhắn này", StatusCodes.Status403Forbidden);
+               ResponseMessageConstraintsChat.FORBIDDEN_UPDATE, StatusCodes.Status403Forbidden);
         }
         
         _mapper.Map(request, message);
@@ -115,8 +112,8 @@ public class ChatMessageService : IChatMessageService
         var message = await _chatMessageRepository.GetSingleAsync(x => x.ChatMessageId == id);
         if (message == null)
         {
-            throw new AppException(ResponseCodeConstants.BAD_REQUEST, 
-                "Không tìm thấy tin nhắn", StatusCodes.Status404NotFound);
+            throw new AppException(ResponseCodeConstants.BAD_REQUEST,
+                ResponseMessageConstraintsChat.NOT_FOUND, StatusCodes.Status404NotFound);
         }
         
         // Kiểm tra quyền xóa
@@ -125,8 +122,8 @@ public class ChatMessageService : IChatMessageService
         
         if (message.UserId != currentUserId)
         {
-            throw new AppException(ResponseCodeConstants.FORBIDDEN, 
-                "Bạn không có quyền xóa tin nhắn này", StatusCodes.Status403Forbidden);
+            throw new AppException(ResponseCodeConstants.FORBIDDEN,
+                ResponseMessageConstraintsChat.FORBIDDEN_DELETE, StatusCodes.Status403Forbidden);
         }
         
         _chatMessageRepository.Remove(message);

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Repositories.Base;
 using Repositories.Models;
 using Repositories.Repositories;
 using Serilog;
@@ -22,7 +21,7 @@ public interface IUserService
 
 public class UserService(IServiceProvider serviceProvider) : IUserService
 {
-    private readonly UserRepository _userRepository = serviceProvider.GetRequiredService<UserRepository>();
+    private readonly IUserRepository _userRepository = serviceProvider.GetRequiredService<IUserRepository>();
     private readonly ILogger _logger = serviceProvider.GetRequiredService<ILogger>();
     private readonly MapperlyMapper _mapper = serviceProvider.GetRequiredService<MapperlyMapper>();
 

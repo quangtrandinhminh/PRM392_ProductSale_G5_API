@@ -1,4 +1,3 @@
-using DotNetEnv;
 using PRM_ProductSale_G5.Extensions;
 using PRM_ProductSale_G5.Hubs;
 using Serilog;

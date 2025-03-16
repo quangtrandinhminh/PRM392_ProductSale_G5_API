@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Repositories.Models;
 using Repositories.Repositories;
 
 namespace Services.Services;

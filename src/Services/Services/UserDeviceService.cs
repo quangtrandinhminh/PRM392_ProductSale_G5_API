@@ -1,12 +1,8 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Repositories.Models;
 using Repositories.Repositories;
 using Serilog;
-using Service.Utils;
 using Services.ApiModels.UserDevice;
-using Services.Constants;
-using Services.Exceptions;
 using Services.Mapper;
 
 namespace Services.Services;

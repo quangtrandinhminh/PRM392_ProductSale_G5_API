@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.SignalR;
 using PRM_ProductSale_G5.Hubs;
+using Services.Enum;
 
 namespace PRM_ProductSale_G5.Extensions;
 public static class ServiceCollectionExtensions
@@ -130,6 +131,13 @@ public static class ServiceCollectionExtensions
                         Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("SYSTEM_SECRET_KEY")))
                 };
             });
+
+        // add required role
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(UserRoleEnum.Admin.ToString(), policy => policy.RequireRole(UserRoleEnum.Admin.ToString()));
+            options.AddPolicy(UserRoleEnum.Customer.ToString(), policy => policy.RequireRole(UserRoleEnum.Customer.ToString()));
+        });
 
         services.AddHttpContextAccessor();
 

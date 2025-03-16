@@ -144,11 +144,18 @@
         public const string FEEDBACK_NOTFOUND = "Không tìm thấy đánh giá";
     }
 
-    public class ResponseMessageImage
+    public class ResponseMessageConstrantsImage
     {
         public const string INVALID_IMAGE = "Hình ảnh không hợp lệ. ";
         public const string INVALID_SIZE = "Kích thước hình ảnh không hợp lệ. ";
         public const string INVALID_FORMAT = "Định dạng hình ảnh không hợp lệ. ";
         public const string INVALID_URL = "Đường dẫn hình ảnh không hợp lệ. ";
+    }
+
+    public class ResponseMessageConstraintsChat
+    {
+        public const string NOT_FOUND = "Không tìm thấy tin nhắn";
+        public const string FORBIDDEN_UPDATE = "Bạn không có quyền chỉnh sửa tin nhắn này";
+        public const string FORBIDDEN_DELETE = "Bạn không có quyền xóa tin nhắn này";
     }
 }

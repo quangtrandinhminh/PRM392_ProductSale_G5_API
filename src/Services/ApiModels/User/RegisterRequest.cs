@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
 using Services.Constants;
 
 namespace Services.ApiModels.User

@@ -1,7 +1,5 @@
-using System.Text;
 using System.Text.Json;
 using FirebaseAdmin;
-using FirebaseAdmin.Auth;
 using FirebaseAdmin.Messaging;
 using Google.Apis.Auth.OAuth2;
 using Serilog;
