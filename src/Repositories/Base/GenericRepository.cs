@@ -26,6 +26,7 @@ public interface IGenericRepository<T> where T : class
     bool Remove(T entity);
     Task<int> SaveChangeAsync();
     int SaveChange();
+    Task<T> AddAsync(T entity);
 }
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
@@ -165,6 +166,13 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     public int SaveChange()
     {
         return _context.SaveChanges();
+    }
+
+    public async Task<T> AddAsync(T entity)
+    {
+        _context.Add(entity);
+        await _context.SaveChangesAsync();
+        return entity;
     }
 }
 

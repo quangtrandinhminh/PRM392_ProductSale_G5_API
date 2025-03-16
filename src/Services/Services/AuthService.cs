@@ -10,6 +10,7 @@ using Services.Enum;
 using Services.Exceptions;
 using Services.Mapper;
 using Services.Utils;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Services.Services;
 
@@ -76,14 +77,15 @@ public class AuthService(IServiceProvider serviceProvider) : IAuthService
 
     private Task<string> GenerateJwtToken(User loggedUser, int hour)
     {
-        var claims = new List<Claim>();
-        claims.AddRange(new[]
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Sid, loggedUser.UserId.ToString()),
-            new Claim(ClaimTypes.Role, loggedUser.Role ?? string.Empty),
+            new Claim(ClaimTypes.Role, loggedUser.Role),
             new Claim(ClaimTypes.Name, loggedUser.Username),
-            new Claim(ClaimTypes.Expired, DateTime.Now.AddHours(hour).Date.ToShortDateString())
-        });
+            new Claim(ClaimTypes.Expired, DateTime.Now.AddDays(1).ToShortDateString()),
+            new Claim(JwtRegisteredClaimNames.Iss, "SaleApp-G5"),
+            new Claim(JwtRegisteredClaimNames.Aud, "SaleApp-G5")
+        };
 
         return Task.FromResult(JwtUtils.GenerateToken(claims.Distinct(), hour));
     }

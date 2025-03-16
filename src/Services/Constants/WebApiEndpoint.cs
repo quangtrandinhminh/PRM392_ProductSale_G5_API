@@ -94,19 +94,31 @@
 
         public static class ChatMessage
         {
-            private const string BaseEndpoint = "~/" + AreaName + "/chatMessage";
-            public const string GetChatMessages = BaseEndpoint;
-            public const string GetChatMessage = BaseEndpoint + "/{id}";
-            public const string CreateChatMessage = BaseEndpoint;
-            public const string UpdateChatMessage = BaseEndpoint;
-            public const string DeleteChatMessage = BaseEndpoint + "/{id}";
+            private const string Prefix = "api/chat-messages";
+            
+            public const string GetChatMessages = Prefix;
+            public const string GetChatMessagesBetweenUsers = $"{Prefix}/conversation/{{otherUserId}}";
+            public const string GetChatMessage = $"{Prefix}/{{id}}";
+            public const string CreateChatMessage = Prefix;
+            public const string UpdateChatMessage = Prefix;
+            public const string DeleteChatMessage = $"{Prefix}/{{id}}";
+            public const string GetUnreadCount = $"{Prefix}/unread-count";
+            public const string MarkAsRead = $"{Prefix}/{{id}}/read";
         }
 
         public static class Notification
         {
-            private const string BaseEndpoint = "~/" + AreaName + "/notification";
-            public const string GetNotifications = BaseEndpoint;
-            public const string CreateNotification = BaseEndpoint;
+            private const string Prefix = "api/notifications";
+            
+            public const string GetNotifications = Prefix;
+            public const string GetNotification = $"{Prefix}/{{id}}";
+            public const string CreateNotification = Prefix;
+            public const string UpdateNotification = Prefix;
+            public const string DeleteNotification = $"{Prefix}/{{id}}";
+            public const string GetUnreadCount = $"{Prefix}/unread-count";
+            public const string MarkAsRead = $"{Prefix}/{{id}}/read";
+            public const string MarkAllAsRead = $"{Prefix}/read-all";
+            public const string CreateCartNotification = $"{Prefix}/cart";
         }
 
         public static class Payment
@@ -114,6 +126,15 @@
             private const string BaseEndpoint = "~/" + AreaName + "/payment";
             public const string VnpayUrl = BaseEndpoint + "/vnpay/payment-url";
             public const string VnpayExecute = BaseEndpoint + "vnpay/payment-execute";
+        }
+
+        public static class UserDevice
+        {
+            private const string Prefix = "api/user-devices";
+            
+            public const string RegisterDevice = $"{Prefix}/register";
+            public const string UnregisterDevice = $"{Prefix}/unregister";
+            public const string GetUserDevices = Prefix;
         }
     }
 }
