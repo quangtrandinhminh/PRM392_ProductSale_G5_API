@@ -12,7 +12,7 @@ This project needs to add an .env file into the API project before running
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/quangtrandinhminh/RentEZ.API.git
+    git clone https://github.com/quangtrandinhminh/PRM392_ProductSale_G5_API.git
     ```
 
 2. Install dependencies:
