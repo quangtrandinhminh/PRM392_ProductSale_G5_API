@@ -10,6 +10,7 @@ using System;
 
 namespace PRM_ProductSale_G5.Controllers
 {
+    [Route("api/products")]
     [ApiController]
     public class ProductController(IServiceProvider serviceProvider) : ControllerBase
     {
