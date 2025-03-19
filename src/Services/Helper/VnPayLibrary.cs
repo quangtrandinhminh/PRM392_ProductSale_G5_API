@@ -1,161 +1,137 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Globalization;
-using System.Net.Sockets;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Services.Helper;
-
-public class VnPayLibrary
+namespace Services.Helper
 {
-    private readonly SortedList<string, string> _requestData = new SortedList<string, string>(new VnPayCompare());
-    private readonly SortedList<string, string> _responseData = new SortedList<string, string>(new VnPayCompare());
-
-    public void AddRequestData(string key, string value)
+    public class VnPayLibrary
     {
-        if (!string.IsNullOrEmpty(value))
+        private SortedList<string, string> _requestData = new SortedList<string, string>(new VnPayCompare());
+        private readonly SortedList<string, string> _responseData = new SortedList<string, string>(new VnPayCompare());
+
+        public void AddRequestData(string key, string value)
         {
-            _requestData.Add(key, value);
-        }
-    }
-
-    public void AddResponseData(string key, string value)
-    {
-        if (!string.IsNullOrEmpty(value))
-        {
-            _responseData.Add(key, value);
-        }
-    }
-
-    public string GetResponseData(string key)
-    {
-        return _responseData.TryGetValue(key, out var retValue) ? retValue : string.Empty;
-    }
-
-    #region Request
-    public string CreateRequestUrl(string baseUrl, string vnpHashSecret)
-    {
-        var data = new StringBuilder();
-
-        foreach (var (key, value) in _requestData.Where(kv => !string.IsNullOrEmpty(kv.Value)))
-        {
-            data.Append(WebUtility.UrlEncode(key) + "=" + WebUtility.UrlEncode(value) + "&");
-        }
-
-        var querystring = data.ToString();
-
-        baseUrl += "?" + querystring;
-        var signData = querystring;
-        if (signData.Length > 0)
-        {
-            signData = signData.Remove(data.Length - 1, 1);
-        }
-
-        var vnpSecureHash = Utils.HmacSHA512(vnpHashSecret, signData);
-        baseUrl += "vnp_SecureHash=" + vnpSecureHash;
-
-        return baseUrl;
-    }
-    #endregion
-
-    #region Response process
-    public bool ValidateSignature(string inputHash, string secretKey)
-    {
-        var rspRaw = GetResponseData();
-        var myChecksum = Utils.HmacSHA512(secretKey, rspRaw);
-        return myChecksum.Equals(inputHash, StringComparison.InvariantCultureIgnoreCase);
-    }
-
-    private string GetResponseData()
-    {
-        var data = new StringBuilder();
-        if (_responseData.ContainsKey("vnp_SecureHashType"))
-        {
-            _responseData.Remove("vnp_SecureHashType");
-        }
-
-        if (_responseData.ContainsKey("vnp_SecureHash"))
-        {
-            _responseData.Remove("vnp_SecureHash");
-        }
-
-        foreach (var (key, value) in _responseData.Where(kv => !string.IsNullOrEmpty(kv.Value)))
-        {
-            data.Append(WebUtility.UrlEncode(key) + "=" + WebUtility.UrlEncode(value) + "&");
-        }
-
-        //remove last '&'
-        if (data.Length > 0)
-        {
-            data.Remove(data.Length - 1, 1);
-        }
-
-        return data.ToString();
-    }
-    #endregion
-}
-
-public class Utils
-{
-    public static string HmacSHA512(string key, string inputData)
-    {
-        var hash = new StringBuilder();
-        var keyBytes = Encoding.UTF8.GetBytes(key);
-        var inputBytes = Encoding.UTF8.GetBytes(inputData);
-        using (var hmac = new HMACSHA512(keyBytes))
-        {
-            var hashValue = hmac.ComputeHash(inputBytes);
-            foreach (var theByte in hashValue)
+            if (!string.IsNullOrEmpty(value))
             {
-                hash.Append(theByte.ToString("x2"));
+                _requestData.Add(key, value);
             }
         }
 
-        return hash.ToString();
-    }
-
-
-    // có chế biến cho .NET Core MVC
-    public static string GetIpAddress(HttpContext context)
-    {
-        var ipAddress = string.Empty;
-        try
+        public string CreateRequestUrl(string baseUrl, string vnp_HashSecret)
         {
-            var remoteIpAddress = context.Connection.RemoteIpAddress;
-
-            if (remoteIpAddress != null)
+            StringBuilder data = new StringBuilder();
+            foreach (KeyValuePair<string, string> kv in _requestData)
             {
-                if (remoteIpAddress.AddressFamily == AddressFamily.InterNetworkV6)
+                if (!string.IsNullOrEmpty(kv.Value))
                 {
-                    remoteIpAddress = Dns.GetHostEntry(remoteIpAddress).AddressList
-                        .FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
+                    data.Append(WebUtility.UrlEncode(kv.Key) + "=" + WebUtility.UrlEncode(kv.Value) + "&");
                 }
+            }
+            string queryString = data.ToString();
+            baseUrl += "?" + queryString;
 
-                if (remoteIpAddress != null) ipAddress = remoteIpAddress.ToString();
+            string signData = queryString;
+            if (signData.Length > 0)
+            {
+                signData = signData.Remove(data.Length - 1, 1); // Remove last '&'
+            }
 
-                return ipAddress;
+            string vnp_SecureHash = HmacSHA512(vnp_HashSecret, signData);
+            baseUrl += "vnp_SecureHash=" + vnp_SecureHash;
+
+            return baseUrl;
+        }
+
+        public static string HmacSHA512(string key, string inputData)
+        {
+            var hash = new StringBuilder();
+            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+            byte[] inputBytes = Encoding.UTF8.GetBytes(inputData);
+            using (var hmac = new HMACSHA512(keyBytes))
+            {
+                byte[] hashValue = hmac.ComputeHash(inputBytes);
+                foreach (var theByte in hashValue)
+                {
+                    hash.Append(theByte.ToString("x2"));
+                }
+            }
+            return hash.ToString();
+        }
+
+        public void AddResponseData(string key, string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                _responseData.Add(key, value);
             }
         }
-        catch (Exception ex)
+
+        public string GetResponseData(string key)
         {
-            return "Invalid IP:" + ex.Message;
+            return _responseData.TryGetValue(key, out var retValue) ? retValue : string.Empty;
         }
 
-        return "127.0.0.1";
-    }
-}
+        #region Response process
+        public bool ValidateSignature(string inputHash, string secretKey)
+        {
+            var rspRaw = GetResponseData();
+            var myChecksum = HmacSHA512(secretKey, rspRaw);
+            return myChecksum.Equals(inputHash, StringComparison.InvariantCultureIgnoreCase);
+        }
 
-public class VnPayCompare : IComparer<string>
-{
-    public int Compare(string x, string y)
+        private string GetResponseData()
+        {
+            var data = new StringBuilder();
+            if (_responseData.ContainsKey("vnp_SecureHashType"))
+            {
+                _responseData.Remove("vnp_SecureHashType");
+            }
+
+            if (_responseData.ContainsKey("vnp_SecureHash"))
+            {
+                _responseData.Remove("vnp_SecureHash");
+            }
+
+            foreach (var (key, value) in _responseData.Where(kv => !string.IsNullOrEmpty(kv.Value)))
+            {
+                data.Append(WebUtility.UrlEncode(key) + "=" + WebUtility.UrlEncode(value) + "&");
+            }
+
+            // Remove last '&'
+            if (data.Length > 0)
+            {
+                data.Remove(data.Length - 1, 1);
+            }
+
+            return data.ToString();
+        }
+        #endregion Response process
+
+        public static string GetRandomNumber(int length)
+        {
+            Random random = new Random();
+            StringBuilder randomNumber = new StringBuilder();
+
+            for (int i = 0; i < length; i++)
+            {
+                randomNumber.Append(random.Next(0, 10).ToString()); // Generate a digit between 0 and 9
+            }
+
+            return randomNumber.ToString();
+        }
+    }
+
+    public class VnPayCompare : IComparer<string>
     {
-        if (x == y) return 0;
-        if (x == null) return -1;
-        if (y == null) return 1;
-        var vnpCompare = CompareInfo.GetCompareInfo("en-US");
-        return vnpCompare.Compare(x, y, CompareOptions.Ordinal);
+        public int Compare(string x, string y)
+        {
+            if (x == y) return 0;
+            if (x == null) return -1;
+            if (y == null) return 1;
+            var vnpCompare = CompareInfo.GetCompareInfo("en-US");
+            return vnpCompare.Compare(x, y, CompareOptions.Ordinal);
+        }
     }
 }
-
-
