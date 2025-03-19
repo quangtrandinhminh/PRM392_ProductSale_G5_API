@@ -55,10 +55,10 @@ public class OrderService(IServiceProvider serviceProvider, IConfiguration confi
         {
             UserId = request.UserId.Value,
             CartId = request.CartId,
-            PaymentMethod = request.PaymentMethod,
+            PaymentMethod = "VnPay",
             BillingAddress = request.BillingAddress,
-            OrderStatus = request.OrderStatus,
-            OrderDate = request.OrderDate,
+            OrderStatus = OrderShopStatusEnum.WaitForPayment.ToString(),
+            OrderDate = DateTime.Now,
         };
 
         _orderRepository.Create(order);
@@ -74,7 +74,6 @@ public class OrderService(IServiceProvider serviceProvider, IConfiguration confi
             var vnPayRequest = new VnPaymentRequest
             {
                 OrderId = order.OrderId,
-                ReturnUrl = _configuration["VnPay:ReturnUrl"] // Get return URL from configuration
             };
 
             orderResponse.PaymentUrl = await _vnPayService.CreatePaymentUrl(context, vnPayRequest);

@@ -25,11 +25,13 @@ namespace Services.Services
     {
         private readonly VnPaySetting _vnpaySetting;
         private readonly IOrderRepository _orderRepository;
+        private readonly IPaymentRepository _paymentRepository;
 
         public VnPayService(IServiceProvider serviceProvider)
         {
             _vnpaySetting = VnPaySetting.Instance;
             _orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
+            _paymentRepository = serviceProvider.GetRequiredService<IPaymentRepository>();
         }
 
         public async Task<string> CreatePaymentUrl(HttpContext context, VnPaymentRequest request)
@@ -52,7 +54,7 @@ namespace Services.Services
             vnpay.AddRequestData("vnp_Version", "2.1.0"); // Version
             vnpay.AddRequestData("vnp_Command", "pay"); // Command for create token
             vnpay.AddRequestData("vnp_TmnCode", _vnpaySetting.TmnCode); // Merchant code
-            vnpay.AddRequestData("vnp_BankCode","");
+            vnpay.AddRequestData("vnp_BankCode", "");
             vnpay.AddRequestData("vnp_Locale", "vn");
             var amount = order.Cart.TotalPrice * 100; // Convert to VND in cents
 
@@ -65,19 +67,34 @@ namespace Services.Services
             }
 
             vnpay.AddRequestData("vnp_Amount", amountInCents.ToString());
+            DateTime createDate = DateTime.Now;
+            vnpay.AddRequestData("vnp_CreateDate", createDate.ToString("yyyyMMddHHmmss")); 
 
-            vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
 
             // Tính toán giá trị thanh toán
-        
             vnpay.AddRequestData("vnp_CurrCode", "VND");
             vnpay.AddRequestData("vnp_TxnRef", tick.ToString());
             vnpay.AddRequestData("vnp_OrderInfo", $"Thanh toán đơn hàng ID: {request.OrderId}, Tổng giá trị: {order.Cart.TotalPrice} VND");
             vnpay.AddRequestData("vnp_ReturnUrl", returnUrl);
             vnpay.AddRequestData("vnp_IpAddr", clientIPAddress);
-            vnpay.AddRequestData("vnp_OrderType", "other"); 
+            vnpay.AddRequestData("vnp_OrderType", "other");
+
             try
             {
+                // Create payment entity in the repository
+                var payment = new Repositories.Models.Payment
+                {
+                    OrderId = order.OrderId,
+                    Amount = amountInCents,
+                    PaymentStatus = PaymentStatusEnum.Pending.ToString(),
+                    PaymentDate = createDate
+                };
+
+                 _paymentRepository.Create(payment);
+                await _paymentRepository.SaveChangeAsync();
+
+
+                // Generate the payment URL
                 var paymentUrl = vnpay.CreateRequestUrl(_vnpaySetting.BaseUrl, _vnpaySetting.HashSecret);
                 return paymentUrl;
             }
@@ -106,6 +123,7 @@ namespace Services.Services
             }
 
             var order = await GetOrderById(vnpOrderId);
+            var payment = await GetPaymentByOrderId(vnpOrderId);
             if (order == null)
             {
                 return new VnPaymentResponse()
@@ -151,6 +169,10 @@ namespace Services.Services
                 order.PaymentMethod = PaymentMethodEnum.VnPay.ToString();
                 order.OrderStatus = OrderShopStatusEnum.Pending.ToString();
                 _orderRepository.Update(order);
+                payment.PaymentStatus = PaymentStatusEnum.Paid.ToString();
+                _paymentRepository.Update(payment);
+                await _paymentRepository.SaveChangeAsync();
+
                 await _orderRepository.SaveChangeAsync();
             }
             else
@@ -162,8 +184,6 @@ namespace Services.Services
                     Message = $"Payment failed with response code: {vnpResponseCode}"
                 };
             }
-
-            // Return the response data
             return new VnPaymentResponse()
             {
                 Success = true,
@@ -189,28 +209,25 @@ namespace Services.Services
                 throw new AppException(ResponseCodeConstants.NOT_FOUND, ResponseMessageConstrantsOrder.NOT_FOUND, StatusCodes.Status404NotFound);
             }
 
-        return new VnPaymentResponse()
-        {
-            Success = true,
-            PaymentMethod = "VnPay",
-            OrderDescription = vnp_OrderInfo,
-            OrderId = vnp_orderId.ToString(),
-            TransactionId = vnp_TransactionId.ToString(),
-            Token = vnp_SecureHash,
-            PaymentId = request.QueryString.ToString(),
-
-            // success true => 00 , false => != 00
-            VnPayResponseCode = vnp_ResponseCode
-        };
-    }
-
-    private async Task<Order> GetOrderById(int orderId)
-    {
-        var order = await _orderRepository.GetSingleAsync(x => x.OrderId == orderId, x => x.Cart);
-        if (order == null)
-        {
-            throw new AppException(ResponseCodeConstants.NOT_FOUND, ResponseMessageConstrantsOrder.NOT_FOUND, StatusCodes.Status404NotFound);
+            // Return the order when it's found
+            return order;
         }
-  
+
+
+        private async Task<Repositories.Models.Payment> GetPaymentByOrderId(int orderId)
+        {
+            var payment = await _paymentRepository.GetSingleAsync(
+                x => x.OrderId == orderId
+            );
+
+            if (payment == null)
+            {
+                throw new AppException(ResponseCodeConstants.NOT_FOUND, ResponseMessageConstrantsOrder.NOT_FOUND, StatusCodes.Status404NotFound);
+            }
+
+            // Ensure that we return the payment when it's found
+            return payment;
+        }
+
     }
 }

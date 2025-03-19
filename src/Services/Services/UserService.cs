@@ -24,7 +24,7 @@ public class UserService(IServiceProvider serviceProvider) : IUserService
     private readonly IUserRepository _userRepository = serviceProvider.GetRequiredService<IUserRepository>();
     private readonly ILogger _logger = serviceProvider.GetRequiredService<ILogger>();
     private readonly MapperlyMapper _mapper = serviceProvider.GetRequiredService<MapperlyMapper>();
-
+        
     public async Task<PaginatedListResponse<UserResponse>> GetAllUsersAsync(int pageNumber, int pageSize)
     {
         _logger.Information($"Getting {pageSize} users at page {pageNumber}");
