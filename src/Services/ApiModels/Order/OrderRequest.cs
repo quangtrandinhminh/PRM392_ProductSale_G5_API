@@ -2,10 +2,7 @@
 
 public class OrderRequest
 {
-    public int? CartId { get; set; }
-
-    public int? UserId { get; set; }
+    public int CartId { get; set; }
 
     public string BillingAddress { get; set; }
-
 }
