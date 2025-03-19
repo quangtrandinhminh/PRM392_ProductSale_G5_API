@@ -44,12 +44,14 @@
 
         public static class Order
         {
-            private const string BaseEndpoint = "~/" + AreaName + "/order";
+            private const string BaseEndpoint = "~/" + AreaName + "/orders";
             public const string GetOrders = BaseEndpoint;
             public const string GetOrder = BaseEndpoint + "/{id}";
             public const string CreateOrder = BaseEndpoint;
             public const string UpdateOrder = BaseEndpoint;
             public const string DeleteOrder = BaseEndpoint + "/{id}";
+            public const string GetOrdersByUser = BaseEndpoint + "/user/{userId}";
+            public const string UpdateOrderStatus = BaseEndpoint + "/{id}/status";
         }
 
         public static class Cart

@@ -12,4 +12,6 @@ public class OrderResponse
     public string? Note { get; set; }
     // public IList<VoucherResponse> PlatformVouchers { get; set; } = new List<VoucherResponse>();
     // public IList<OrderShopListResponse> OrderShops { get; set; } = new List<OrderShopListResponse>();
+    public string? PaymentUrl { get; set; }
+    public string? PaymentMethod { get; set; }
 }
