@@ -22,4 +22,9 @@ public partial class Cart
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
     public virtual User User { get; set; }
+
+    public object Include(Func<object, object> value)
+    {
+        throw new NotImplementedException();
+    }
 }
