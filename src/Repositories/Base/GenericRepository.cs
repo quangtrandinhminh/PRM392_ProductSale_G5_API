@@ -147,7 +147,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public void Update(T entity)
     {
-        _context.Set<T>().Update(entity);
+        _context.Entry(entity).State = EntityState.Modified;
+        _context.Update(entity);
     }
 
     public bool Remove(T entity)

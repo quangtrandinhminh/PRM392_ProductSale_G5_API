@@ -1,4 +1,4 @@
-﻿using Services.ApiModels.NewFolder;
+﻿using Services.ApiModels.CartItem;
 
 namespace Services.ApiModels.Cart;
 

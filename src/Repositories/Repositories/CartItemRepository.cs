@@ -9,5 +9,4 @@ public interface ICartItemRepository : IGenericRepository<CartItem>
 
 public class CartItemRepository : GenericRepository<CartItem>, ICartItemRepository
 {
-
 }

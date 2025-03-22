@@ -4,13 +4,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Service.Utils;
 using Services.ApiModels;
 using Services.ApiModels.Cart;
+using Services.ApiModels.CartItem;
 using Services.Constants;
+using Services.Enum;
 using Services.Services;
 
 namespace PRM_ProductSale_G5.Controllers
 {
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Customer")]
     public class CartController : ControllerBase
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -22,72 +24,32 @@ namespace PRM_ProductSale_G5.Controllers
              _httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
           
         }
-        [Authorize]
+
         [HttpPost]
-        [Route("create")]
-        public async Task<IActionResult> CreateCart([FromQuery] int productId, [FromQuery] int quantity)
+        [Route(WebApiEndpoint.Cart.AddToCart)]
+        public async Task<IActionResult> CreateCart([FromBody] CartItemRequest request)
         {
-            var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
-            var currentUserId = JwtClaimUltils.GetUserId(currentUser);
-
-            if (currentUserId == null)
-            {
-                return Unauthorized(BaseResponse.BadRequestResponseDto("User not authenticated"));
-            }
-
-            var response = await _cartService.AddProductToCartAsync(currentUserId, productId, quantity);
+            var response = await _cartService.AddProductToCartAsync(request);
             return Ok(BaseResponse.OkResponseDto(response));
         }
 
         [HttpGet]
-        [Route("GetCarts")]
+        [Route(WebApiEndpoint.Cart.GetCarts)]
         public async Task<IActionResult> GetCarts()
         {
-            try
-            {
-                var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
-                var currentUserId = JwtClaimUltils.GetUserId(currentUser);
-
-                if (currentUserId == null || currentUserId == 0)
-                {
-                    return Unauthorized(BaseResponse.InternalErrorResponseDto("Invalid or missing authentication token.")); // ✅ Unauthorized response
-                }
-
-                var cartResponse = await _cartService.GetCartByUserIdAsync(currentUserId);
-                if (cartResponse == null)
-                {
-                    return NotFound(BaseResponse.InternalErrorResponseDto("No active cart found.")); // ✅ Not Found response
-                }
-
-                return Ok(BaseResponse.OkResponseDto(cartResponse)); // ✅ Successful response
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, BaseResponse.InternalErrorResponseDto("An error occurred while retrieving the cart.")); // ✅ Internal Server Error response
-            }
+            return Ok(BaseResponse.OkResponseDto(await _cartService.GetCartByUserIdAsync()));
         }
 
         [HttpPut]
-        [Route("Updatecart")]
+        [Route(WebApiEndpoint.Cart.UpdateCart)]
         public async Task<IActionResult> UpdateCart([FromBody] UpdateCartRequest request)
         {
-            // Get logged-in user from JWT token
-            var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
-            var currentUserId = JwtClaimUltils.GetUserId(currentUser);
-
-            // Ensure user is authenticated
-            if (currentUserId <= 0) // Assuming 0 or negative is invalid
-            {
-                return Unauthorized(BaseResponse.BadRequestResponseDto("User not authenticated"));
-            }
-
-            var result = await _cartService.UpdateProductQuantityAsync(currentUserId, request.ProductId, request.Quantity);
-
-            return Ok(BaseResponse.OkResponseDto(request));
+            var result = await _cartService.UpdateProductQuantityAsync(request);
+            return Ok(BaseResponse.OkResponseDto(result));
         }
 
 
-        [HttpDelete]
+        /*[HttpDelete]
         [Route("DeleteCartItem")]
         public async Task<IActionResult> DeleteCartItem([FromQuery] int productId)
         {
@@ -109,7 +71,7 @@ namespace PRM_ProductSale_G5.Controllers
             // Call service to delete the cart item
             var result = await _cartService.DeleteCartItemAsync(currentUserId, productId);
             return Ok(BaseResponse.OkResponseDto(result));
-        }
+        }*/
 
     }
 }

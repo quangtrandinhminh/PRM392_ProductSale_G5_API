@@ -3,6 +3,7 @@ using Repositories.Models;
 using Repositories.Repositories;
 using Services.Mapper;
 using System;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Repositories.Base;
@@ -15,8 +16,9 @@ using Services.Constants;
 using Services.Exceptions;
 using Services.ApiModels.Cart;
 using Microsoft.EntityFrameworkCore;
+using Service.Utils;
+using Services.ApiModels.CartItem;
 using Services.Enum;
-using Services.ApiModels.NewFolder;
 
 
 namespace Services.Services;
@@ -26,10 +28,10 @@ public interface ICartService
     // get cart by user id, including cart items
 
     // add product to cart
-    Task<CartResponse> GetCartByUserIdAsync(int userId);
-    Task<bool> AddProductToCartAsync(int userId, int productId, int quantity);
-    Task<bool> UpdateProductQuantityAsync(int userId, int productId, int quantity);
-    Task<bool> DeleteCartItemAsync(int userId, int productId);
+    Task<CartResponse> GetCartByUserIdAsync();
+    Task<int> AddProductToCartAsync(CartItemRequest request);
+    Task<int> UpdateProductQuantityAsync(UpdateCartRequest request);
+    // Task<bool> DeleteCartItemAsync(int userId, int productId);
 
 }
 
@@ -45,26 +47,29 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
     private readonly IProductRepository _productRepository = serviceProvider.GetRequiredService<IProductRepository>();
     private readonly IUserRepository _userRepository = serviceProvider.GetRequiredService<IUserRepository>();
     private readonly MapperlyMapper _mapper = serviceProvider.GetRequiredService<MapperlyMapper>();
+    private readonly IHttpContextAccessor _httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+    private readonly IUnitOfWork _unitOfWork = serviceProvider.GetRequiredService<IUnitOfWork>();
+    private readonly ILogger _logger = serviceProvider.GetRequiredService<ILogger>();
 
 
     // Get cart by user ID, including cart items
 
 
-    public async Task<CartResponse> GetCartByUserIdAsync(int userId)
+    public async Task<CartResponse> GetCartByUserIdAsync()
     {
-        // Eagerly load CartItems and then the Product for each CartItem
-        var cart = await _cartRepository.GetSingleAsync(
-            x => x.UserId == userId && x.Status == CartEnum.Active.ToString(),
-            x => x.CartItems // Include CartItems
-        );
+        var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
+        var userId = JwtClaimUltils.GetUserId(currentUser);
+        _logger.Information("Get cart by userId: {UserId}", userId);
 
+        // Eagerly load CartItems and then the Product for each CartItem
+        var cart = await _cartRepository.GetCartByUserIdAsync(userId, CartEnum.Active.ToString());
         if (cart == null)
         {
-            return null;
+            throw new AppException(ResponseCodeConstants.NOT_FOUND, "Cart not found", StatusCodes.Status404NotFound);
         }
 
         // Ensure Product is loaded.
-        if (cart.CartItems != null)
+        /*if (cart.CartItems != null)
         {
             foreach (var cartItem in cart.CartItems)
             {
@@ -75,45 +80,45 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
                     cartItem.Product = await _productRepository.GetSingleAsync(p => p.ProductId == cartItem.ProductId);
                 }
             }
-        }
+        }*/
 
         var response = _mapper.Map(cart);
 
         // ✅ Ensure CartItems include product details
-        response.CartItems = cart.CartItems?.Select(ci => new CartItemResponse
+        /*response.CartItems = cart.CartItems?.Select(ci => new CartItemResponse
         {
             ProductId = ci.ProductId ?? 0,
             Quantity = ci.Quantity,
             Price = ci.Price,
             ProductName = ci.Product?.ProductName ?? "Unknown"
-        }).ToList() ?? new List<CartItemResponse>();
+        }).ToList() ?? new List<CartItemResponse>();*/
 
         return response;
     }
 
-
-
-
-
-    // Add product to cart
-    public async Task<bool> AddProductToCartAsync(int userId, int productId, int quantity)
+    public async Task<int> AddProductToCartAsync(CartItemRequest request)
     {
         try
         {
-            // ✅ Ensure user exists
-            var user = await _userRepository.GetSingleAsync(u => u.UserId == userId);
-            if (user == null) throw new Exception("User does not exist");
+            // Get current logged in user
+            var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
+            var userId = JwtClaimUltils.GetUserId(currentUser);
+            _logger.Information("Add product {productId} with quantity {quantity} to cart by userId: {UserId}",
+                                request.ProductId, request.Quantity, userId);
 
-            // ✅ Ensure product exists
-            var product = await _productRepository.GetSingleAsync(p => p.ProductId == productId);
-            if (product == null) throw new Exception("Product does not exist");
+            // Ensure product exists
+            var product = await _productRepository.GetSingleAsync(p => p.ProductId == request.ProductId);
+            if (product == null)
+            {
+                throw new AppException(ResponseCodeConstants.BAD_REQUEST, "Product does not exist", StatusCodes.Status400BadRequest);
+            }
 
-            // ✅ Fetch cart, include cart items
+            // Fetch the cart including its items
             var cart = await _cartRepository.GetSingleAsync(c => c.UserId == userId, c => c.CartItems);
 
+            // If cart does not exist, create a new one with an empty CartItems list.
             if (cart == null)
             {
-                // ✅ Create new cart and ensure it's saved
                 cart = new Cart
                 {
                     UserId = userId,
@@ -121,116 +126,138 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
                     TotalPrice = 0,
                     CartItems = new List<CartItem>()
                 };
-
-                _cartRepository.Create(cart);
-                await _cartRepository.SaveChangeAsync(); // Ensures cart has an ID
+            }
+            else if (cart.CartItems == null)
+            {
+                cart.CartItems = new List<CartItem>();
             }
 
-            // ✅ Find existing cart item
-            var existingCartItem = cart.CartItems?.FirstOrDefault(ci => ci.ProductId == productId);
+            // Check if the cart already contains this product
+            var existingCartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == request.ProductId);
             if (existingCartItem != null)
             {
-                existingCartItem.Quantity += quantity;
+                // Update the quantity and price for the existing item
+                existingCartItem.Quantity += request.Quantity;
                 existingCartItem.Price = existingCartItem.Quantity * product.Price;
                 _cartItemRepository.Update(existingCartItem);
             }
             else
             {
-                // ✅ Ensure new cart item is added correctly
+                // Create a new cart item and add it to the cart
                 var newCartItem = new CartItem
                 {
-                    CartId = cart.CartId,
-                    ProductId = productId,
-                    Quantity = quantity,
-                    Price = product.Price * quantity
+                    CartId = cart.CartId,  // This should be 0 if cart is new; repository will handle it.
+                    ProductId = product.ProductId,
+                    Quantity = request.Quantity,
+                    Price = product.Price * request.Quantity
                 };
 
-                _cartItemRepository.Create(newCartItem);
-                _cartItemRepository.SaveChangeAsync();
+                cart.CartItems.Add(newCartItem);
+                await _cartItemRepository.AddAsync(newCartItem);
             }
 
+            // Recalculate the cart's total price
             cart.TotalPrice = cart.CartItems.Sum(ci => ci.Price);
-            _cartRepository.Update(cart);
-            await _cartRepository.SaveChangeAsync();
-            return true;
+
+            // If the cart is new (CartId == 0), create it; otherwise, update it.
+            if (cart.CartId == null)
+            {
+                await _cartRepository.AddAsync(cart);
+            }
+            else
+            {
+                _cartRepository.Update(cart);
+            }
+
+            var result = await _cartRepository.SaveChangeAsync() + await _cartItemRepository.SaveChangeAsync();
+            return result;
         }
         catch (DbUpdateException dbEx)
         {
+            _logger.Error(dbEx, "Database update failed when adding product to cart");
             throw new Exception("Database update failed. Possible constraint violation.", dbEx);
         }
         catch (Exception ex)
         {
+            _logger.Error(ex, "An error occurred while adding product to cart");
             throw new Exception("An error occurred while adding product to cart.", ex);
         }
     }
 
-
-
-    //Update product quantity in cart
-
-
-    public async Task<bool> UpdateProductQuantityAsync(int userId, int productId, int quantity)
+    public async Task<int> UpdateProductQuantityAsync(UpdateCartRequest request)
     {
-        // Retrieve cart with tracking enabled
-        var cart = await _cartRepository.GetSingleAsync(
-            c => c.UserId == userId,
-            c => c.CartItems
+        // Get the current logged in user
+        var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
+        var userId = JwtClaimUltils.GetUserId(currentUser);
 
+        _logger.Information("Update cart {cartId}", request.CartId);
+
+        // Retrieve cart with tracking enabled, including its CartItems
+        var cart = await _cartRepository.GetSingleAsync(
+            c => c.CartId == request.CartId,
+            c => c.CartItems
         );
 
         if (cart == null)
         {
-            throw new AppException(ResponseCodeConstants.NOT_FOUND, "Cart not found", StatusCodes.Status404NotFound);
+            throw new AppException(ResponseCodeConstants.NOT_FOUND, 
+                ResponseMessageConstraintsCart.NOT_FOUND, StatusCodes.Status404NotFound);
         }
 
-        // Find the cart item
-        var cartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == productId);
-        if (cartItem == null)
+        if (cart.UserId != userId)
         {
-            throw new AppException(ResponseCodeConstants.NOT_FOUND, "Product not found in cart", StatusCodes.Status404NotFound);
+            throw new AppException(ResponseCodeConstants.FORBIDDEN, 
+               ResponseMessageConstraintsCart.NOT_ALLOWED, StatusCodes.Status403Forbidden);
         }
 
-        if (quantity <= 0)
+        // Iterate through the request's cart items
+        foreach (var item in request.CartItems)
         {
-            _cartItemRepository.Remove(cartItem); // ✅ Properly mark for deletion
-            await _cartItemRepository.SaveChangeAsync();
-        }
-        else
-        {
-            // Preserve original unit price before modifying quantity
-            var unitPrice = cartItem.Quantity > 0 ? cartItem.Price / cartItem.Quantity : cartItem.Price;
-            cartItem.Quantity = quantity;
-            cartItem.Price = quantity * unitPrice;
+            var cartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == item.ProductId);
+            if (cartItem == null)
+            {
+                throw new AppException(ResponseCodeConstants.NOT_FOUND, "Product not found in cart", StatusCodes.Status404NotFound);
+            }
 
-            _cartItemRepository.Update(cartItem); // ✅ Explicitly mark as updated
+            // Ensure product exists
+            var product = await _productRepository.GetSingleAsync(p => p.ProductId == item.ProductId);
+            if (product == null)
+            {
+                throw new AppException(ResponseCodeConstants.NOT_FOUND, "Product does not exist", StatusCodes.Status404NotFound);
+            }
+
+            // If quantity is 0, remove the cart item; else, update quantity and calculate price
+            if (item.Quantity == 0)
+            {
+                _cartItemRepository.Remove(cartItem);
+            }
+            else
+            {
+                cartItem.Quantity = item.Quantity;
+                cartItem.Price = product.Price * item.Quantity;
+                _cartItemRepository.Update(cartItem); // Mark the cart item as modified
+            }
         }
 
-        // Recalculate total price
+        // Recalculate the cart's total price based on the (updated) cart items
         cart.TotalPrice = cart.CartItems.Sum(ci => ci.Price);
-        _cartRepository.Update(cart); // ✅ Ensure changes are tracked
+        _cartRepository.Update(cart); // Mark the cart as modified
 
         try
         {
-            var changes = await _cartRepository.SaveChangeAsync();
-            if (changes == 0)
-            {
-                throw new Exception("No changes detected in database.");
-            }
-            return true;
+            return await _cartRepository.SaveChangeAsync() + await _cartItemRepository.SaveChangeAsync();
         }
         catch (Exception ex)
         {
-          
+            _logger.Error(ex, "Failed to update the cart");
             throw new AppException(ResponseCodeConstants.INTERNAL_SERVER_ERROR,
                                    "Failed to update the cart",
                                    StatusCodes.Status500InternalServerError);
         }
     }
 
-
-
     // Remove product from cart
-    public async Task<bool> DeleteCartItemAsync(int userId, int productId)
+    /*public async Task<bool> DeleteCartItemAsync(int userId, int productId)
     {
         // Retrieve cart with tracking enabled
         var cart = await _cartRepository.GetSingleAsync(
@@ -278,6 +305,5 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
                                    "Failed to delete the cart item",
                                    StatusCodes.Status500InternalServerError);
         }
-    }
-
+    }*/
 }
