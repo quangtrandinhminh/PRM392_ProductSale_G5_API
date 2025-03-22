@@ -26,7 +26,7 @@ namespace Services.Services
 
     public class ProductService(IServiceProvider serviceProvider) : IProductService
     {
-        private readonly ProductRepository _productRepository = serviceProvider.GetRequiredService<ProductRepository>();
+        private readonly IProductRepository _productRepository = serviceProvider.GetRequiredService<IProductRepository>();
         private readonly ILogger _logger = serviceProvider.GetRequiredService<ILogger>();
         private readonly MapperlyMapper _mapper = serviceProvider.GetRequiredService<MapperlyMapper>();
 
