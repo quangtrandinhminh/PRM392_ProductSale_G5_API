@@ -62,7 +62,7 @@
             private const string BaseEndpoint = "~/" + AreaName + "/cart";
             public const string GetCarts = BaseEndpoint;
             public const string GetCart = BaseEndpoint + "/{cartId}";
-            public const string CreateCart = BaseEndpoint;
+            public const string AddToCart = BaseEndpoint;
             public const string UpdateCart = BaseEndpoint;
             public const string DeleteCart = BaseEndpoint + "/{cartId}";
         }

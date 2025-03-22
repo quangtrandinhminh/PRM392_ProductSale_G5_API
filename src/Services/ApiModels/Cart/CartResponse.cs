@@ -1,4 +1,6 @@
-﻿namespace Services.ApiModels.Cart;
+﻿using Services.ApiModels.CartItem;
+
+namespace Services.ApiModels.Cart;
 
 public class CartResponse
 {
@@ -9,4 +11,6 @@ public class CartResponse
     public decimal TotalPrice { get; set; }
 
     public string Status { get; set; }
+
+    public List<CartItemResponse> CartItems { get; set; } = new();
 }
