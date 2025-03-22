@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Repositories.Models;
 using Services.ApiModels;
 using Services.ApiModels.PaginatedList;
 using Services.ApiModels.Product;
@@ -14,6 +15,7 @@ namespace PRM_ProductSale_G5.Controllers
     [ApiController]
     public class ProductController(IServiceProvider serviceProvider) : ControllerBase
     {
+        private readonly IFileService _fileService = serviceProvider.GetRequiredService<IFileService>();
         private readonly IProductService _productService = serviceProvider.GetRequiredService<IProductService>();
 
         [HttpGet]
@@ -45,7 +47,7 @@ namespace PRM_ProductSale_G5.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [Route(WebApiEndpoint.Product.CreateProduct)]
-        public async Task<IActionResult> CreateProduct([FromBody] ProductCreateRequest request)
+        public async Task<IActionResult> CreateProduct([FromForm] ProductCreateRequest request)
         {
             return Ok(BaseResponse.OkResponseDto(await _productService.CreateProductAsync(request)));
         }
@@ -53,7 +55,7 @@ namespace PRM_ProductSale_G5.Controllers
         [HttpPut]
         [Authorize(Roles = "Admin")]
         [Route(WebApiEndpoint.Product.UpdateProduct)]
-        public async Task<IActionResult> UpdateProduct([FromBody] ProductUpdateRequest request)
+        public async Task<IActionResult> UpdateProduct([FromForm] ProductUpdateRequest request)
         {
             return Ok(BaseResponse.OkResponseDto(await _productService.UpdateProductAsync(request)));
         }

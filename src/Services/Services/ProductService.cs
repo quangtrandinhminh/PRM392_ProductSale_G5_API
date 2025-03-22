@@ -30,6 +30,7 @@ namespace Services.Services
     {
         private readonly IProductRepository _productRepository = serviceProvider.GetRequiredService<IProductRepository>();
         private readonly ILogger _logger = serviceProvider.GetRequiredService<ILogger>();
+        private readonly IFileService _fileService = serviceProvider.GetRequiredService<IFileService>();
         private readonly MapperlyMapper _mapper = serviceProvider.GetRequiredService<MapperlyMapper>();
 
         public async Task<PaginatedListResponse<ProductResponse>> GetAllProductsAsync(int pageNumber, int pageSize)
@@ -56,6 +57,7 @@ namespace Services.Services
         {
             _logger.Information("Creating new product {request}", request);
             var product = _mapper.Map(request);
+            product.ImageUrl = await _fileService.SaveFileAsync(request.Image, new[] { ".jpg", ".jpeg", ".png" });
             _productRepository.Create(product);
             await _productRepository.SaveChangeAsync();
             return _mapper.Map(product);
@@ -65,7 +67,7 @@ namespace Services.Services
         {
             _logger.Information("Updating product {request}", request.ProductId);
             var product = await GetProductById(request.ProductId);
-
+            product.ImageUrl = await _fileService.SaveFileAsync(request.Image, new[] { ".jpg", ".jpeg", ".png" });
             _mapper.Map(request, product);
             _productRepository.Update(product);
             return await _productRepository.SaveChangeAsync();
