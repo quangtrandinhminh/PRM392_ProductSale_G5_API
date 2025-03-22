@@ -172,6 +172,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ICartItemRepository, CartItemRepository>();
     }
 
     private static string GetEnvironmentVariableOrThrow(string key)

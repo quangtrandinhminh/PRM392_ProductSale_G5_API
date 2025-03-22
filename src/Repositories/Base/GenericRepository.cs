@@ -126,7 +126,6 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     public async Task<T> GetSingleAsync(Expression<Func<T, bool>> predicate,
         params Expression<Func<T, object>>[] includeProperties)
     {
-
         var query = DbSet.AsQueryable();
 
         if (includeProperties != null)
