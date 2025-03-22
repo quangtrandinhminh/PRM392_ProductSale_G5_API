@@ -52,11 +52,10 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
 
     public async Task<CartResponse> GetCartByUserIdAsync(int userId)
     {
-
+        // Eagerly load CartItems and then the Product for each CartItem
         var cart = await _cartRepository.GetSingleAsync(
             x => x.UserId == userId && x.Status == CartEnum.Active.ToString(),
-            x => x.CartItems,
-            x => x.CartItems.Select(ci => ci.Product)
+            x => x.CartItems // Include CartItems
         );
 
         if (cart == null)
@@ -64,6 +63,19 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
             return null;
         }
 
+        // Ensure Product is loaded.
+        if (cart.CartItems != null)
+        {
+            foreach (var cartItem in cart.CartItems)
+            {
+                // Load the Product for each CartItem.  This is necessary because the original query only loads the CartItem
+                if (cartItem.Product == null)
+                {
+                    // Assuming you have a _productRepository or similar
+                    cartItem.Product = await _productRepository.GetSingleAsync(p => p.ProductId == cartItem.ProductId);
+                }
+            }
+        }
 
         var response = _mapper.Map(cart);
 
@@ -75,7 +87,6 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
             Price = ci.Price,
             ProductName = ci.Product?.ProductName ?? "Unknown"
         }).ToList() ?? new List<CartItemResponse>();
-
 
         return response;
     }
@@ -138,11 +149,8 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
                 _cartItemRepository.SaveChangeAsync();
             }
 
-            // ✅ Recalculate total price correctly
             cart.TotalPrice = cart.CartItems.Sum(ci => ci.Price);
             _cartRepository.Update(cart);
-
-            // ✅ Save changes in a transaction
             await _cartRepository.SaveChangeAsync();
             return true;
         }
