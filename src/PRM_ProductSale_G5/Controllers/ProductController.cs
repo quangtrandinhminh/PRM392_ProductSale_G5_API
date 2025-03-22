@@ -14,7 +14,7 @@ namespace PRM_ProductSale_G5.Controllers
     [ApiController]
     public class ProductController(IServiceProvider serviceProvider) : ControllerBase
     {
-        private readonly ProductService _productService = serviceProvider.GetRequiredService<ProductService>();
+        private readonly IProductService _productService = serviceProvider.GetRequiredService<IProductService>();
 
         [HttpGet]
         [Authorize(Roles = "Admin,Customer")]
@@ -31,6 +31,23 @@ namespace PRM_ProductSale_G5.Controllers
         public async Task<IActionResult> GetProduct([FromRoute] int id)
         {
             return Ok(BaseResponse.OkResponseDto(await _productService.GetProductByIdAsync(id)));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin,Customer")]
+        [Route(WebApiEndpoint.Product.Search)]
+        public async Task<IActionResult> SearchProduct([FromQuery] string productName, [FromQuery] PaginatedListRequest request)
+        {
+            return Ok(BaseResponse.OkResponseDto(
+                await _productService.SearchProductByNameAsync(productName, request.PageNumber, request.PageSize)));
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [Route(WebApiEndpoint.Product.CreateProduct)]
+        public async Task<IActionResult> CreateProduct([FromBody] ProductCreateRequest request)
+        {
+            return Ok(BaseResponse.OkResponseDto(await _productService.CreateProductAsync(request)));
         }
 
         [HttpPut]

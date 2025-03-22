@@ -30,6 +30,7 @@
             public const string CreateProduct = BaseEndpoint;
             public const string UpdateProduct = BaseEndpoint;
             public const string DeleteProduct = BaseEndpoint + "/{id}";
+            public const string Search = BaseEndpoint + "/search";
         }
 
         public static class Category

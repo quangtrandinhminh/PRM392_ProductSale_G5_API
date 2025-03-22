@@ -20,13 +20,15 @@ namespace Services.Services
     {
         Task<PaginatedListResponse<ProductResponse>> GetAllProductsAsync(int pageNumber, int pageSize);
         Task<ProductResponse> GetProductByIdAsync(int id);
+        Task<ProductResponse> CreateProductAsync(ProductCreateRequest request);
         Task<int> UpdateProductAsync(ProductUpdateRequest request);
         Task<int> DeleteProductAsync(int id);
+        Task<PaginatedListResponse<ProductResponse>> SearchProductByNameAsync(string productName, int pageNumber, int pageSize);
     }
 
     public class ProductService(IServiceProvider serviceProvider) : IProductService
     {
-        private readonly ProductRepository _productRepository = serviceProvider.GetRequiredService<ProductRepository>();
+        private readonly IProductRepository _productRepository = serviceProvider.GetRequiredService<IProductRepository>();
         private readonly ILogger _logger = serviceProvider.GetRequiredService<ILogger>();
         private readonly MapperlyMapper _mapper = serviceProvider.GetRequiredService<MapperlyMapper>();
 
@@ -47,6 +49,15 @@ namespace Services.Services
         {
             _logger.Information($"Getting product with id {id}");
             var product = await _productRepository.GetSingleAsync(x => x.ProductId == id);
+            return _mapper.Map(product);
+        }
+
+        public async Task<ProductResponse> CreateProductAsync(ProductCreateRequest request)
+        {
+            _logger.Information("Creating new product {request}", request);
+            var product = _mapper.Map(request);
+            _productRepository.Create(product);
+            await _productRepository.SaveChangeAsync();
             return _mapper.Map(product);
         }
 
@@ -78,6 +89,19 @@ namespace Services.Services
             }
 
             return product;
+        }
+
+        public async Task<PaginatedListResponse<ProductResponse>> SearchProductByNameAsync(string productName, int pageNumber, int pageSize)
+        {
+            _logger.Information($"Searching product with name {productName}");
+            var products = await _productRepository.GetAllPaginatedQueryable(pageNumber, pageSize, x => x.ProductName.Contains(productName));
+            if (products is null)
+            {
+                throw new AppException(ResponseCodeConstants.BAD_REQUEST,
+                    ResponseMessageConstrantsProduct.NOTFOUND, StatusCodes.Status400BadRequest);
+            }
+
+            return _mapper.Map(products);
         }
     }
 }
