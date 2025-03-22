@@ -29,7 +29,7 @@ public interface ICartService
     Task<CartResponse> GetCartByUserIdAsync(int userId);
     Task<bool> AddProductToCartAsync(int userId, int productId, int quantity);
     Task<bool> UpdateProductQuantityAsync(int userId, int productId, int quantity);
-    Task<bool> RemoveProductFromCartAsync(int userId, int productId);
+    Task<bool> DeleteCartItemAsync(int userId, int productId);
 
 }
 
@@ -52,11 +52,10 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
 
     public async Task<CartResponse> GetCartByUserIdAsync(int userId)
     {
-
+        // Eagerly load CartItems and then the Product for each CartItem
         var cart = await _cartRepository.GetSingleAsync(
             x => x.UserId == userId && x.Status == CartEnum.Active.ToString(),
-            x => x.CartItems,
-            x => x.CartItems.Select(ci => ci.Product)
+            x => x.CartItems // Include CartItems
         );
 
         if (cart == null)
@@ -64,6 +63,19 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
             return null;
         }
 
+        // Ensure Product is loaded.
+        if (cart.CartItems != null)
+        {
+            foreach (var cartItem in cart.CartItems)
+            {
+                // Load the Product for each CartItem.  This is necessary because the original query only loads the CartItem
+                if (cartItem.Product == null)
+                {
+                    // Assuming you have a _productRepository or similar
+                    cartItem.Product = await _productRepository.GetSingleAsync(p => p.ProductId == cartItem.ProductId);
+                }
+            }
+        }
 
         var response = _mapper.Map(cart);
 
@@ -75,7 +87,6 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
             Price = ci.Price,
             ProductName = ci.Product?.ProductName ?? "Unknown"
         }).ToList() ?? new List<CartItemResponse>();
-
 
         return response;
     }
@@ -138,11 +149,8 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
                 _cartItemRepository.SaveChangeAsync();
             }
 
-            // ✅ Recalculate total price correctly
             cart.TotalPrice = cart.CartItems.Sum(ci => ci.Price);
             _cartRepository.Update(cart);
-
-            // ✅ Save changes in a transaction
             await _cartRepository.SaveChangeAsync();
             return true;
         }
@@ -163,36 +171,101 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
 
     public async Task<bool> UpdateProductQuantityAsync(int userId, int productId, int quantity)
     {
-        
+        // Retrieve cart with tracking enabled
+        var cart = await _cartRepository.GetSingleAsync(
+            c => c.UserId == userId,
+            c => c.CartItems
 
-        // Retrieve cart with its items
-        var cart = await _cartRepository.GetSingleAsync(c => c.UserId == userId, c => c.CartItems);
-        if (cart is null)
+        );
+
+        if (cart == null)
         {
-            throw new AppException(ResponseCodeConstants.NOT_FOUND,
-                                   "Cart not found",
-                                   StatusCodes.Status404NotFound);
+            throw new AppException(ResponseCodeConstants.NOT_FOUND, "Cart not found", StatusCodes.Status404NotFound);
         }
 
         // Find the cart item
         var cartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == productId);
-        if (cartItem is null)
+        if (cartItem == null)
         {
-            throw new AppException(ResponseCodeConstants.NOT_FOUND,
-                                   "Product not found in cart",
-                                   StatusCodes.Status404NotFound);
+            throw new AppException(ResponseCodeConstants.NOT_FOUND, "Product not found in cart", StatusCodes.Status404NotFound);
         }
 
-        // Preserve original unit price before modifying quantity
-        var unitPrice = cartItem.Price / (cartItem.Quantity > 0 ? cartItem.Quantity : 1);
-        cartItem.Quantity = quantity;
-        cartItem.Price = quantity * unitPrice;
+        if (quantity <= 0)
+        {
+            _cartItemRepository.Remove(cartItem); // ✅ Properly mark for deletion
+            await _cartItemRepository.SaveChangeAsync();
+        }
+        else
+        {
+            // Preserve original unit price before modifying quantity
+            var unitPrice = cartItem.Quantity > 0 ? cartItem.Price / cartItem.Quantity : cartItem.Price;
+            cartItem.Quantity = quantity;
+            cartItem.Price = quantity * unitPrice;
 
-        _cartItemRepository.Update(cartItem);
+            _cartItemRepository.Update(cartItem); // ✅ Explicitly mark as updated
+        }
 
         // Recalculate total price
         cart.TotalPrice = cart.CartItems.Sum(ci => ci.Price);
-        _cartRepository.Update(cart);
+        _cartRepository.Update(cart); // ✅ Ensure changes are tracked
+
+        try
+        {
+            var changes = await _cartRepository.SaveChangeAsync();
+            if (changes == 0)
+            {
+                throw new Exception("No changes detected in database.");
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+          
+            throw new AppException(ResponseCodeConstants.INTERNAL_SERVER_ERROR,
+                                   "Failed to update the cart",
+                                   StatusCodes.Status500InternalServerError);
+        }
+    }
+
+
+
+    // Remove product from cart
+    public async Task<bool> DeleteCartItemAsync(int userId, int productId)
+    {
+        // Retrieve cart with tracking enabled
+        var cart = await _cartRepository.GetSingleAsync(
+            c => c.UserId == userId,
+            c => c.CartItems
+        );
+
+        if (cart == null)
+        {
+            throw new AppException(ResponseCodeConstants.NOT_FOUND, "Cart not found", StatusCodes.Status404NotFound);
+        }
+
+        // Find the cart item
+        var cartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == productId);
+        if (cartItem == null)
+        {
+            throw new AppException(ResponseCodeConstants.NOT_FOUND, "Product not found in cart", StatusCodes.Status404NotFound);
+        }
+
+        // ✅ Remove the cart item
+        _cartItemRepository.Remove(cartItem);
+        await _cartItemRepository.SaveChangeAsync(); // Save immediately
+
+        // Recalculate total price
+        cart.TotalPrice = cart.CartItems.Where(ci => ci.ProductId != productId).Sum(ci => ci.Price);
+
+        // If no items left, delete the cart
+        if (!cart.CartItems.Any(ci => ci.ProductId != productId))
+        {
+            _cartRepository.Remove(cart);
+        }
+        else
+        {
+            _cartRepository.Update(cart);
+        }
 
         try
         {
@@ -201,30 +274,10 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
         }
         catch (Exception ex)
         {
-           
-            throw new AppException(ResponseCodeConstants.NOT_FOUND,
-                                   "An error occurred while updating the cart",
+            throw new AppException(ResponseCodeConstants.INTERNAL_SERVER_ERROR,
+                                   "Failed to delete the cart item",
                                    StatusCodes.Status500InternalServerError);
         }
     }
 
-
-
-    // Remove product from cart
-    public async Task<bool> RemoveProductFromCartAsync(int userId, int productId)
-    {
-        var cart = await _cartRepository.GetSingleAsync(c => c.UserId == userId, c => c.CartItems);
-        if (cart == null) return false;
-
-        var cartItem = cart.CartItems.FirstOrDefault(ci => ci.ProductId == productId);
-        if (cartItem == null) return false;
-
-        _cartItemRepository.Remove(cartItem);
-
-        cart.TotalPrice = cart.CartItems.Where(ci => ci.ProductId != productId).Sum(ci => ci.Price);
-        _cartRepository.Update(cart);
-        await _cartRepository.SaveChangeAsync();
-
-        return true;
-    }
 }

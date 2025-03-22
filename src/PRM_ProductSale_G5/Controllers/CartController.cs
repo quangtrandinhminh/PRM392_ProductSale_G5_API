@@ -67,20 +67,49 @@ namespace PRM_ProductSale_G5.Controllers
             }
         }
 
-
-
         [HttpPut]
-            [Route(WebApiEndpoint.Cart.UpdateCart)]
-            public async Task<IActionResult> UpdateCart([FromBody] int userId, int productId, int quantity)
+        [Route("Updatecart")]
+        public async Task<IActionResult> UpdateCart([FromBody] UpdateCartRequest request)
+        {
+            // Get logged-in user from JWT token
+            var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
+            var currentUserId = JwtClaimUltils.GetUserId(currentUser);
+
+            // Ensure user is authenticated
+            if (currentUserId <= 0) // Assuming 0 or negative is invalid
             {
-                return Ok(BaseResponse.OkResponseDto(await _cartService.UpdateProductQuantityAsync(userId, productId, quantity)));
+                return Unauthorized(BaseResponse.BadRequestResponseDto("User not authenticated"));
             }
 
-            [HttpDelete]
-            [Route(WebApiEndpoint.Cart.DeleteCart)]
-            public async Task<IActionResult> DeleteCart([FromRoute] int userId, int productId)
-            {
-                return Ok(BaseResponse.OkResponseDto(await _cartService.RemoveProductFromCartAsync(userId, productId)));
-            }
+            var result = await _cartService.UpdateProductQuantityAsync(currentUserId, request.ProductId, request.Quantity);
+
+            return Ok(BaseResponse.OkResponseDto(request));
         }
+
+
+        [HttpDelete]
+        [Route("DeleteCartItem")]
+        public async Task<IActionResult> DeleteCartItem([FromQuery] int productId)
+        {
+            var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
+            var currentUserId = JwtClaimUltils.GetUserId(currentUser);
+
+            // Ensure user is authenticated
+            if (currentUserId <= 0)
+            {
+                return Unauthorized(BaseResponse.BadRequestResponseDto("User not authenticated"));
+            }
+
+            // Validate productId
+            if (productId <= 0)
+            {
+                return BadRequest(BaseResponse.BadRequestResponseDto("Invalid product ID"));
+            }
+
+            // Call service to delete the cart item
+            var result = await _cartService.DeleteCartItemAsync(currentUserId, productId);
+            return Ok(BaseResponse.OkResponseDto(result));
+        }
+
     }
+}
