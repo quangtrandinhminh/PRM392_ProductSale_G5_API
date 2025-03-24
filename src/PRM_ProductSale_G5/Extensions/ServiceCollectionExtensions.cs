@@ -161,7 +161,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
         services.AddScoped<IUserDeviceService, UserDeviceService>();
         services.AddScoped<IProductService, ProductService>();
-        services.AddScoped<IFileService, FileService>();
 
         // Register repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
