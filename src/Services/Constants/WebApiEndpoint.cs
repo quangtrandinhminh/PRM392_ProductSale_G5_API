@@ -1,4 +1,4 @@
-﻿namespace Services.Constants
+namespace Services.Constants
 {
     public static class WebApiEndpoint
     {
@@ -52,6 +52,7 @@
             public const string DeleteOrder = BaseEndpoint + "/{orderId}";
             public const string GetOrdersByUser = BaseEndpoint + "/user/{userId}";
             public const string UpdateOrderStatus = BaseEndpoint + "/{id}/status";
+            public const string GetOrdersByStatus = BaseEndpoint + "/status";
             public const string CustomerChangeOrderStatus = BaseEndpoint + "customer/{orderId}";
             public const string AdminChangeOrderStatus = BaseEndpoint + "admin/{orderId}";
             public const string CustomerCancelOrder = BaseEndpoint + "customer/{orderId}";
@@ -62,7 +63,7 @@
             private const string BaseEndpoint = "~/" + AreaName + "/cart";
             public const string GetCarts = BaseEndpoint;
             public const string GetCart = BaseEndpoint + "/{cartId}";
-            public const string CreateCart = BaseEndpoint;
+            public const string AddToCart = BaseEndpoint;
             public const string UpdateCart = BaseEndpoint;
             public const string DeleteCart = BaseEndpoint + "/{cartId}";
         }

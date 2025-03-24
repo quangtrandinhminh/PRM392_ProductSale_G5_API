@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Repositories.Models;
@@ -23,6 +23,8 @@ public interface IOrderService
     Task<List<OrderResponse>> GetOrdersByUserAsync();
     Task<int> UpdateOrderStatusAsync(int orderId, string newStatus);
     Task<int> DeleteOrderAsync(int orderId);
+
+    Task<List<OrderResponse>> GetOrdersByStatusAsync(string? status);
     Task<int> CustomerChangeOrderStatusAsync(int orderId);
     Task<int> AdminChangeOrderStatusAsync(int orderId);
     Task<int> CustomerCancelOrderAsync(int orderId);
@@ -111,6 +113,50 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
         return await _orderRepository.SaveChangeAsync();
     }
 
+    public async Task<List<OrderResponse>> GetOrdersByStatusAsync(string? status)
+    {
+        // Kiểm tra nếu status là null hoặc rỗng, lấy tất cả đơn hàng
+        bool getAllOrders = string.IsNullOrEmpty(status);
+
+        // Nếu status không null hoặc rỗng, kiểm tra trạng thái hợp lệ
+        if (!getAllOrders)
+        {
+            var validStatuses = new List<string> { "Pending", "Paid", "Shipped", "Completed", "Cancelled" };
+            if (!validStatuses.Contains(status))
+            {
+                throw new AppException(ResponseCodeConstants.BAD_REQUEST, "Invalid order status", StatusCodes.Status400BadRequest);
+            }
+        }
+
+        // Lấy danh sách đơn hàng từ repository, bao gồm thông tin User và Cart
+        var query = _orderRepository.GetAllWithCondition(x => getAllOrders || x.OrderStatus == status)
+                                    .Include(o => o.User)
+                                    .Include(o => o.Cart);
+
+        var orders = await query.ToListAsync();
+
+        // Ánh xạ sang OrderResponse
+        var orderResponses = orders.Select(order => new OrderResponse
+        {
+            OrderId = order.OrderId,
+            CartId = order.CartId,
+            UserId = order.UserId,
+            PaymentMethod = order.PaymentMethod,
+            BillingAddress = order.BillingAddress,
+            OrderStatus = order.OrderStatus,
+            OrderDate = order.OrderDate,
+
+            // Thông tin User
+            CustomerName = order.User?.Username,
+            CustomerEmail = order.User?.Email,
+            CustomerPhone = order.User?.PhoneNumber,
+
+            // Thông tin Cart
+            CartTotalAmount = order.Cart?.TotalPrice
+        }).ToList();
+
+        return orderResponses;
+    }
     public async Task<int> CustomerChangeOrderStatusAsync(int orderId)
     {
         _logger.Information("Change order status by id {@orderId}", orderId);
