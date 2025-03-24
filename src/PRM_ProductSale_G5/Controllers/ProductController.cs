@@ -14,7 +14,6 @@ namespace PRM_ProductSale_G5.Controllers
     [ApiController]
     public class ProductController(IServiceProvider serviceProvider) : ControllerBase
     {
-        private readonly IFileService _fileService = serviceProvider.GetRequiredService<IFileService>();
         private readonly IProductService _productService = serviceProvider.GetRequiredService<IProductService>();
 
         [HttpGet]
