@@ -46,5 +46,12 @@ namespace PRM_ProductSale_G5.Controllers
         {
             return Ok(BaseResponse.OkResponseDto(await _orderService.DeleteOrderAsync(id)));
         }
+
+        [HttpGet]
+        [Route(WebApiEndpoint.Order.GetOrdersByStatus)]
+        public async Task<IActionResult> GetOrdersByStatus([FromQuery] string status)
+        {
+            return Ok(BaseResponse.OkResponseDto(await _orderService.GetOrdersByStatusAsync(status)));
+        }
     }
 }

@@ -52,6 +52,7 @@
             public const string DeleteOrder = BaseEndpoint + "/{id}";
             public const string GetOrdersByUser = BaseEndpoint + "/user/{userId}";
             public const string UpdateOrderStatus = BaseEndpoint + "/{id}/status";
+            public const string GetOrdersByStatus = BaseEndpoint + "/status";
         }
 
         public static class Cart
