@@ -1,4 +1,4 @@
-﻿namespace Services.Constants
+namespace Services.Constants
 {
     public static class WebApiEndpoint
     {
@@ -30,6 +30,7 @@
             public const string CreateProduct = BaseEndpoint;
             public const string UpdateProduct = BaseEndpoint;
             public const string DeleteProduct = BaseEndpoint + "/{id}";
+            public const string Search = BaseEndpoint + "/search";
         }
 
         public static class Category
@@ -46,23 +47,25 @@
         {
             private const string BaseEndpoint = "~/" + AreaName + "/orders";
             public const string GetOrders = BaseEndpoint;
-            public const string GetOrder = BaseEndpoint + "/{id}";
+            public const string GetOrder = BaseEndpoint + "/{orderId}";
             public const string CreateOrder = BaseEndpoint;
-            public const string UpdateOrder = BaseEndpoint;
-            public const string DeleteOrder = BaseEndpoint + "/{id}";
+            public const string DeleteOrder = BaseEndpoint + "/{orderId}";
             public const string GetOrdersByUser = BaseEndpoint + "/user/{userId}";
             public const string UpdateOrderStatus = BaseEndpoint + "/{id}/status";
             public const string GetOrdersByStatus = BaseEndpoint + "/status";
+            public const string CustomerChangeOrderStatus = BaseEndpoint + "customer/{orderId}";
+            public const string AdminChangeOrderStatus = BaseEndpoint + "admin/{orderId}";
+            public const string CustomerCancelOrder = BaseEndpoint + "customer/{orderId}";
         }
 
         public static class Cart
         {
             private const string BaseEndpoint = "~/" + AreaName + "/cart";
             public const string GetCarts = BaseEndpoint;
-            public const string GetCart = BaseEndpoint + "/{id}";
-            public const string CreateCart = BaseEndpoint;
+            public const string GetCart = BaseEndpoint + "/{cartId}";
+            public const string AddToCart = BaseEndpoint;
             public const string UpdateCart = BaseEndpoint;
-            public const string DeleteCart = BaseEndpoint + "/{id}";
+            public const string DeleteCart = BaseEndpoint + "/{cartId}";
         }
 
         public static class CartItem

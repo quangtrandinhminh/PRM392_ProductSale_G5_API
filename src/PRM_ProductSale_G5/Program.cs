@@ -1,3 +1,4 @@
+using Microsoft.Extensions.FileProviders;
 using PRM_ProductSale_G5.Extensions;
 using PRM_ProductSale_G5.Hubs;
 using Serilog;
@@ -20,6 +21,12 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseSwaggerDocumentation();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "ProductImages")),
+    RequestPath = "/ProductImages"
+});
 
 app.UseCors("_myAllowSpecificOrigins");
 app.UseCors("SignalR");
