@@ -35,7 +35,7 @@ public partial class MapperlyMapper
     public partial Product Map(ProductCreateRequest request);
     public partial void Map(ProductUpdateRequest request, Product entity);
     public partial ProductResponse Map(Product entity);
-    public partial PaginatedListResponse<ProductResponse> Map(PaginatedListResponse<Product> entity);
+    public partial PaginatedListResponse<ProductResponse> Map(PaginatedList<Product> entity);
 
     // category
     public partial Category Map(CategoryCreateRequest request);

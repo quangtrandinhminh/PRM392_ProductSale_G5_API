@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using PRM_ProductSale_G5.Hubs;
 using Service.Utils;
 using Services.ApiModels;
@@ -24,6 +25,7 @@ namespace PRM_ProductSale_G5.Controllers
             _notificationService = serviceProvider.GetRequiredService<INotificationService>();
             _notificationHubContext = serviceProvider.GetRequiredService<IHubContext<NotificationHub>>();
             _httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+          
         }
         
         [HttpGet]

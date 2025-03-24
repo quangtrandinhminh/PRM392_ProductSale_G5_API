@@ -160,6 +160,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IFirebaseService, FirebaseService>();
         services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
         services.AddScoped<IUserDeviceService, UserDeviceService>();
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IFileService, FileService>();
 
         // Register repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -169,7 +171,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
-        services.AddScoped<IPaymentRepository, PaymentRepository>();  
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ICartItemRepository, CartItemRepository>();
     }
 
     private static string GetEnvironmentVariableOrThrow(string key)

@@ -1,4 +1,4 @@
-﻿namespace Services.ApiModels.Order;
+namespace Services.ApiModels.Order;
 
 public class OrderResponse
 {

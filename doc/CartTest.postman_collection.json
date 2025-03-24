@@ -1,0 +1,207 @@
+{
+	"info": {
+		"_postman_id": "a5a78594-6e54-486d-81d6-7f7afa3027d1",
+		"name": "CartTest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29777760"
+	},
+	"item": [
+		{
+			"name": "Addtocart",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"productId\": 2,\r\n    \"quantity\": 3\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:7180/api/cart",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7180",
+					"path": [
+						"api",
+						"cart"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateCart AddMore",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"cartId\": 2,\r\n  \"cartItems\": [\r\n    {\r\n      \"productId\": 2,\r\n      \"quantity\": 10\r\n    },\r\n    {\r\n      \"productId\": 3,\r\n      \"quantity\": 10\r\n    }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:7180/api/cart",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7180",
+					"path": [
+						"api",
+						"cart"
+					]
+				},
+				"description": "Generated from cURL: curl -X 'GET' \\\r\n  'https://localhost:7180/Updatecart' \\\r\n  -H 'accept: */*' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n  \"userId\": 0,\r\n  \"productId\": 0,\r\n  \"quantity\": 0\r\n}'"
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateCart Add new",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"cartId\": 2,\r\n  \"cartItems\": [\r\n    {\r\n      \"productId\": 2,\r\n      \"quantity\": 10\r\n    },\r\n    {\r\n      \"productId\": 3,\r\n      \"quantity\": 0\r\n    },\r\n    {\r\n      \"productId\": 4,\r\n      \"quantity\": 10\r\n    }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:7180/api/cart",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7180",
+					"path": [
+						"api",
+						"cart"
+					]
+				},
+				"description": "Generated from cURL: curl -X 'GET' \\\r\n  'https://localhost:7180/Updatecart' \\\r\n  -H 'accept: */*' \\\r\n  -H 'Content-Type: application/json' \\\r\n  -d '{\r\n  \"userId\": 0,\r\n  \"productId\": 0,\r\n  \"quantity\": 0\r\n}'"
+			},
+			"response": []
+		},
+		{
+			"name": "Get cart",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://localhost:7180/api/cart/",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "7180",
+					"path": [
+						"api",
+						"cart",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9zaWQiOiI3Iiwicm9sZSI6IkN1c3RvbWVyIiwidW5pcXVlX25hbWUiOiJzdHJpbmciLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL2V4cGlyZWQiOiIyMy8wMy8yMDI1IiwiaXNzIjoiU2FsZUFwcC1HNSIsImF1ZCI6IlNhbGVBcHAtRzUiLCJuYmYiOjE3NDI2MjQ5MTYsImV4cCI6MTc0MjcxMTMxNiwiaWF0IjoxNzQyNjI0OTE2fQ.tUj4EWjzEeBFdu--SVT-T81URMUUaErphV3fAYyZjxc",
+			"type": "string"
+		}
+	]
+}

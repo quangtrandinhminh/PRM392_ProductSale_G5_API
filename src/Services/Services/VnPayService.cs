@@ -1,6 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Repositories.Base;
-using Repositories.Models;
 using Service.ApiModels.VNPay;
 using Services.Config;
 using Services.Constants;
@@ -8,10 +6,7 @@ using Services.Enum;
 using Services.Exceptions;
 using Services.Helper;
 using Repositories.Repositories;
-using System.Net.Http;
 using Microsoft.AspNetCore.Http;
-using static Services.Constants.WebApiEndpoint;
-using System.Net;
 
 namespace Services.Services
 {
@@ -167,7 +162,7 @@ namespace Services.Services
             {
                 // Update order status to "Pending" or any relevant status
                 order.PaymentMethod = PaymentMethodEnum.VnPay.ToString();
-                order.OrderStatus = OrderShopStatusEnum.Pending.ToString();
+                order.OrderStatus = OrderStatusEnum.Pending.ToString();
                 _orderRepository.Update(order);
                 payment.PaymentStatus = PaymentStatusEnum.Paid.ToString();
                 _paymentRepository.Update(payment);

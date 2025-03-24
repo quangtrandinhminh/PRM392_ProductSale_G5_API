@@ -127,6 +127,12 @@
         public const string EXISTED_DESCRIPTION = "Mô tả bị trùng với một loại sản phẩm khác.";
     }
 
+    public class ResponseMessageConstraintsCart
+    {
+        public const string NOT_FOUND = "Không tìm thấy giỏ hàng";
+        public const string NOT_FOUND_ITEM = "Không tìm thấy sản phẩm trong giỏ hàng";
+        public const string NOT_ALLOWED = "Bạn không được phép xem giỏ hàng này";
+    }
     public class ResponseMessageConstrantsOrder
     {
         public const string NOT_FOUND = "Không tìm thấy đơn hàng";
