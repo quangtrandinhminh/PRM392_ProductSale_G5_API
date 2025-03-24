@@ -142,5 +142,14 @@ namespace Services.Constants
             public const string UnregisterDevice = $"{Prefix}/unregister";
             public const string GetUserDevices = Prefix;
         }
+
+        public static class StoreLocation
+        {
+            private const string BaseEndpoint = "~/" + AreaName + "/store-location";
+            public const string GetStoreLocations = BaseEndpoint;
+            public const string CreateStoreLocation = BaseEndpoint;
+            public const string UpdateStoreLocation = BaseEndpoint;
+            public const string DeleteStoreLocation = BaseEndpoint + "/{id}";
+        }
     }
 }
