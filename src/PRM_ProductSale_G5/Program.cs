@@ -22,12 +22,6 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseSwaggerDocumentation();
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "ProductImages")),
-    RequestPath = "/ProductImages"
-});
-
 app.UseCors("_myAllowSpecificOrigins");
 app.UseCors("SignalR");
 
