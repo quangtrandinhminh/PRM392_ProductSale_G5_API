@@ -24,7 +24,7 @@ public interface IOrderService
     Task<int> UpdateOrderStatusAsync(int orderId, string newStatus);
     Task<int> DeleteOrderAsync(int orderId);
 
-    Task<List<OrderResponse>> GetOrdersByStatusAsync(string status);
+    Task<List<OrderResponse>> GetOrdersByStatusAsync(string? status);
     Task<int> CustomerChangeOrderStatusAsync(int orderId);
     Task<int> AdminChangeOrderStatusAsync(int orderId);
     Task<int> CustomerCancelOrderAsync(int orderId);
@@ -113,20 +113,27 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
         return await _orderRepository.SaveChangeAsync();
     }
 
-    public async Task<List<OrderResponse>> GetOrdersByStatusAsync(string status)
+    public async Task<List<OrderResponse>> GetOrdersByStatusAsync(string? status)
     {
-        // Kiểm tra trạng thái hợp lệ
-        var validStatuses = new List<string> { "Pending", "Paid", "Shipped", "Completed", "Cancelled" };
-        if (!validStatuses.Contains(status))
+        // Kiểm tra nếu status là null hoặc rỗng, lấy tất cả đơn hàng
+        bool getAllOrders = string.IsNullOrEmpty(status);
+
+        // Nếu status không null hoặc rỗng, kiểm tra trạng thái hợp lệ
+        if (!getAllOrders)
         {
-            throw new AppException(ResponseCodeConstants.BAD_REQUEST, "Invalid order status", StatusCodes.Status400BadRequest);
+            var validStatuses = new List<string> { "Pending", "Paid", "Shipped", "Completed", "Cancelled" };
+            if (!validStatuses.Contains(status))
+            {
+                throw new AppException(ResponseCodeConstants.BAD_REQUEST, "Invalid order status", StatusCodes.Status400BadRequest);
+            }
         }
 
         // Lấy danh sách đơn hàng từ repository, bao gồm thông tin User và Cart
-        var orders = await _orderRepository.GetAllWithCondition(x => x.OrderStatus == status)
-                                           .Include(o => o.User)
-                                           .Include(o => o.Cart)
-                                           .ToListAsync();
+        var query = _orderRepository.GetAllWithCondition(x => getAllOrders || x.OrderStatus == status)
+                                    .Include(o => o.User)
+                                    .Include(o => o.Cart);
+
+        var orders = await query.ToListAsync();
 
         // Ánh xạ sang OrderResponse
         var orderResponses = orders.Select(order => new OrderResponse
@@ -146,7 +153,7 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
 
             // Thông tin Cart
             CartTotalAmount = order.Cart?.TotalPrice
-        }).ToList(); // Fix lỗi ép kiểu
+        }).ToList();
 
         return orderResponses;
     }
