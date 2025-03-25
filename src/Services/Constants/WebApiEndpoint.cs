@@ -10,6 +10,7 @@ namespace Services.Constants
             public const string Hello = BaseEndpoint + "/hello";
             public const string Register = BaseEndpoint + "/register";
             public const string Login = BaseEndpoint + "/authentication";
+            public const string GetAdminId = BaseEndpoint + "/admin-id";
         }
 
         public static class User
