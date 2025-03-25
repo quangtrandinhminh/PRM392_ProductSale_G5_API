@@ -17,6 +17,12 @@ namespace PRM_ProductSale_G5.Controllers
             return Ok(BaseResponse.OkResponseDto("Hello"));
         }
 
+        [HttpGet(WebApiEndpoint.Authentication.GetAdminId)]
+        public async Task<IActionResult> GetAdminId()
+        {
+            return Ok(BaseResponse.OkResponseDto(await service.GetAdminIdAsync()));
+        }
+
         [HttpPost(WebApiEndpoint.Authentication.Login)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
