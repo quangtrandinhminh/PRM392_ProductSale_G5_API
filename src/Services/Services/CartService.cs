@@ -108,7 +108,8 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
             };
 
             cart.CartItems.Add(newCartItem);
-            await _cartItemRepository.AddAsync(newCartItem);
+            //var cartItem = await _cartItemRepository.AddAsync(newCartItem);
+            // log cartItem
         }
 
         // Recalculate the cart's total price
@@ -129,6 +130,12 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
 
         var cartItem = await _cartItemRepository.GetSingleAsync(ci => ci.CartItemId == request.CartItemId, 
             ci => ci.Cart, ci => ci.Product);
+
+        if (cartItem == null)
+        {
+            throw new AppException(ResponseCodeConstants.NOT_FOUND,
+                ResponseMessageConstraintsCart.NOT_FOUND_ITEM, StatusCodes.Status404NotFound);
+        }
 
         if (cartItem.Cart.UserId != userId)
         {
@@ -170,6 +177,12 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
 
         var cartItem = await _cartItemRepository.GetSingleAsync(ci => ci.CartItemId == cartItemId,
             ci => ci.Cart, ci => ci.Product);
+
+        if (cartItem == null)
+        {
+            throw new AppException(ResponseCodeConstants.NOT_FOUND, 
+                ResponseMessageConstraintsCart.NOT_FOUND_ITEM, StatusCodes.Status404NotFound);
+        }
 
         if (cartItem.Cart.UserId != userId)
         {

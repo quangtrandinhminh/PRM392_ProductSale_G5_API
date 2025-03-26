@@ -63,19 +63,9 @@ namespace Services.Constants
         {
             private const string BaseEndpoint = "~/" + AreaName + "/cart";
             public const string GetCarts = BaseEndpoint;
-            public const string AddToCart = BaseEndpoint;
-            public const string UpdateCart = BaseEndpoint;
-            public const string DeleteCart = BaseEndpoint + "/{cartItemId}";
-        }
-
-        public static class CartItem
-        {
-            private const string BaseEndpoint = "~/" + AreaName + "/cartItem";
-            public const string GetCartItems = BaseEndpoint;
-            public const string GetCartItem = BaseEndpoint + "/{id}";
-            public const string CreateCartItem = BaseEndpoint;
-            public const string UpdateCartItem = BaseEndpoint;
-            public const string DeleteCartItem = BaseEndpoint + "/{id}";
+            public const string AddToCart = BaseEndpoint + "/cartItem";
+            public const string UpdateCart = BaseEndpoint + "/cartItem";
+            public const string DeleteCart = BaseEndpoint + "/cartItem/{cartItemId}";
         }
 
         public static class ProductCategory
