@@ -38,6 +38,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UserDevice> UserDevices { get; set; }
+
     public static string GetConnectionString(string connectionStringName)
     {
         var config = new ConfigurationBuilder()
@@ -313,6 +315,27 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.UserDevices)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("user_devices_user_id_fkey");
+        });
+
+        modelBuilder.Entity<UserDevice>(entity =>
+        {
+            entity.HasKey(e => e.UserDeviceId).HasName("PK_UserDevices");
+
+            entity.Property(e => e.UserDeviceId).HasColumnName("UserDeviceId");
+            entity.Property(e => e.DeviceToken)
+                .IsRequired()
+                .HasMaxLength(255);
+            entity.Property(e => e.DeviceType)
+                .IsRequired()
+                .HasMaxLength(50);
+            entity.Property(e => e.LastUsed)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UserId).HasColumnName("UserId");
+
+            entity.HasOne(d => d.User).WithMany()
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_UserDevices_Users");
         });
 
         OnModelCreatingPartial(modelBuilder);

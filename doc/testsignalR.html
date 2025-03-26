@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <style>
+        #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
+        .log { color: gray; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>SignalR Test</h1>
+    <div>
+        <button id="testChat">Test Chat API</button>
+        <button id="testNotification">Test Notification API</button>
+    </div>
+    <div id="messages"></div>
+    <script>
+        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9zaWQiOiIxMiIsInJvbGUiOiJDdXN0b21lciIsInVuaXF1ZV9uYW1lIjoiYWxpY2Vfd29uZGVyIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9leHBpcmVkIjoiMy8xNy8yMDI1IiwiaXNzIjoiU2FsZUFwcC1HNSIsImF1ZCI6IlNhbGVBcHAtRzUiLCJuYmYiOjE3NDIwOTgzNzUsImV4cCI6MTc0MjE4NDc3NSwiaWF0IjoxNzQyMDk4Mzc1fQ.2yJO-jfrqp00XkNxXGKx51YCE-ua1k-ko4rOScFizE0';
+        
+        function logMessage(message, type = 'log') {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<p class="${type}">${message}</p>`;
+            console.log(message);
+        }
+        
+        // Kết nối đến ChatHub
+        const chatConnection = new signalR.HubConnectionBuilder()
+            .withUrl('http://localhost:5288/chatHub', { 
+                accessTokenFactory: () => token 
+            })
+            .configureLogging(signalR.LogLevel.Debug)
+            .build();
+            
+        // Kết nối đến NotificationHub
+        const notificationConnection = new signalR.HubConnectionBuilder()
+            .withUrl('http://localhost:5288/notificationHub', { 
+                accessTokenFactory: () => token 
+            })
+            .configureLogging(signalR.LogLevel.Debug)
+            .build();
+        
+        // Xử lý sự kiện nhận tin nhắn chat
+        chatConnection.on('ReceiveMessage', (message) => {
+            logMessage(`<strong>Chat:</strong> ${JSON.stringify(message)}`, 'success');
+        });
+        
+        // Xử lý sự kiện nhận thông báo
+        notificationConnection.on('ReceiveNotification', (notification) => {
+            logMessage(`<strong>Notification:</strong> ${JSON.stringify(notification)}`, 'success');
+        });
+        
+        // Khởi động kết nối
+        chatConnection.start()
+            .then(() => logMessage('Connected to ChatHub', 'success'))
+            .catch(err => logMessage(`Error connecting to ChatHub: ${err}`, 'error'));
+            
+        notificationConnection.start()
+            .then(() => logMessage('Connected to NotificationHub', 'success'))
+            .catch(err => logMessage(`Error connecting to NotificationHub: ${err}`, 'error'));
+            
+        // Test API
+        document.getElementById('testChat').addEventListener('click', async () => {
+            try {
+                logMessage('Sending chat message...');
+                const response = await fetch('http://localhost:5288/api/chat-messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        userId: 11,
+                        message: 'Test message from web client'
+                    })
+                });
+                
+                const data = await response.json();
+                logMessage(`API response: ${JSON.stringify(data)}`, response.ok ? 'success' : 'error');
+            } catch (error) {
+                logMessage(`Error calling chat API: ${error}`, 'error');
+            }
+        });
+        
+        document.getElementById('testNotification').addEventListener('click', async () => {
+            try {
+                logMessage('Sending notification...');
+                const response = await fetch('http://localhost:5288/api/notifications/cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(5)
+                });
+                
+                const data = await response.json();
+                logMessage(`API response: ${JSON.stringify(data)}`, response.ok ? 'success' : 'error');
+            } catch (error) {
+                logMessage(`Error calling notification API: ${error}`, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

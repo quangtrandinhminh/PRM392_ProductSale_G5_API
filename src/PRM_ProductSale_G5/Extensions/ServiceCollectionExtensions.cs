@@ -5,6 +5,12 @@ using Repositories.Repositories;
 using Services.Config;
 using Services.Mapper;
 using Services.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.SignalR;
+using PRM_ProductSale_G5.Hubs;
+using Services.Enum;
 
 namespace PRM_ProductSale_G5.Extensions;
 public static class ServiceCollectionExtensions
@@ -26,6 +32,14 @@ public static class ServiceCollectionExtensions
     private static void RegisterThirdPartyServices(this IServiceCollection services)
     {
         // Configure settings
+        services.Configure<SystemSettingModel>(options =>
+        {
+            options.Domain = Environment.GetEnvironmentVariable("SYSTEM_DOMAIN");
+            options.SecretKey = GetEnvironmentVariableOrThrow("SYSTEM_SECRET_KEY");
+            options.SecretCode = GetEnvironmentVariableOrThrow("SYSTEM_SECRET_CODE");
+        });
+        SystemSettingModel.Instance = services.BuildServiceProvider().GetService<IOptions<SystemSettingModel>>().Value;
+
         services.Configure<VnPaySetting>(options =>
         {
             options.TmnCode = GetEnvironmentVariableOrThrow("VNPAY_TMN_CODE");
@@ -60,48 +74,107 @@ public static class ServiceCollectionExtensions
             options.CloudinaryUrl = GetEnvironmentVariableOrThrow("CLOUDINARY_URL");
         });
         CloudinarySetting.Instance = services.BuildServiceProvider().GetService<IOptions<CloudinarySetting>>().Value;
+
+        services.Configure<FirebaseSetting>(options =>
+        {
+            options.ProjectId = GetEnvironmentVariableOrThrow("FIREBASE_PROJECT_ID");
+            options.ClientEmail = GetEnvironmentVariableOrThrow("FIREBASE_CLIENT_EMAIL");
+            options.PrivateKey = GetEnvironmentVariableOrThrow("FIREBASE_PRIVATE_KEY");
+        });
+        FirebaseSetting.Instance = services.BuildServiceProvider().GetService<IOptions<FirebaseSetting>>().Value;
     }
 
-    private static void RegisterInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection RegisterInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Add DbContext
         services.AddDbContext<AppDbContext>();
 
         // Add Cors
-        const string myAllowSpecificOrigins = "_myAllowSpecificOrigins";
         services.AddCors(options =>
         {
-            options.AddPolicy(myAllowSpecificOrigins, policy =>
+            options.AddPolicy("AllowAll", builder =>
             {
-                policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin();
+                builder
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+            
+            options.AddPolicy("SignalR", builder =>
+            {
+                builder
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials()
+                    .SetIsOriginAllowed(_ => true);
             });
         });
+
+        // Đăng ký IUserIdProvider
+        services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+        
+        // Đảm bảo đặt trước dòng AddSignalR
+        services.AddSignalR();
+        
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = Environment.GetEnvironmentVariable("APP_NAME"),
+                    ValidAudience = Environment.GetEnvironmentVariable("APP_NAME"),
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("SYSTEM_SECRET_KEY")))
+                };
+            });
+
+        // add required role
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(UserRoleEnum.Admin.ToString(), policy => policy.RequireRole(UserRoleEnum.Admin.ToString()));
+            options.AddPolicy(UserRoleEnum.Customer.ToString(), policy => policy.RequireRole(UserRoleEnum.Customer.ToString()));
+        });
+
+        services.AddHttpContextAccessor();
+
+        return services;
     }
 
     private static void RegisterApplicationServices(IServiceCollection services)
     {
         // Register services
         services.AddScoped<MapperlyMapper>();
-        services.AddScoped<AuthService>();
-        services.AddScoped<EmailService>();
-        services.AddScoped<CloudinaryService>();
-        services.AddScoped<UserService>();
-        services.AddScoped<VnPayService>();
-        // services.AddScoped<CartService>();
-        // services.AddScoped<OrderService>();
-        // services.AddScoped<NotificationService>();
-        // services.AddScoped<ChatMessageService>();
-        
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<ICloudinaryService, CloudinaryService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IVnPayService, VnPayService>();
+        services.AddScoped<ICartService, CartService>();
+        services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IChatMessageService, ChatMessageService>();
+        services.AddScoped<IFirebaseService, FirebaseService>();
+        services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
+        services.AddScoped<IUserDeviceService, UserDeviceService>();
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IStoreLocationService, StoreLocationService>();
+
         // Register repositories
-        services.AddScoped<UnitOfWork>();
-        services.AddScoped<AuthRepository>();
-        services.AddScoped<UserRepository>();
-        // services.AddScoped<CartRepository>();
-        // services.AddScoped<CartItemRepository>();
-        // services.AddScoped<ProductRepository>();
-        // services.AddScoped<OrderRepository>();
-        // services.AddScoped<NotificationRepository>();
-        // services.AddScoped<ChatMessageRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+        services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ICartItemRepository, CartItemRepository>();
+        services.AddScoped<IStoreLocationRepository, StoreLocationRepository>();
     }
 
     private static string GetEnvironmentVariableOrThrow(string key)

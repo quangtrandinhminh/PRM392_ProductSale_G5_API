@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Services.ApiModels;
 using Services.ApiModels.PaginatedList;
 using Services.ApiModels.User;
@@ -8,9 +9,10 @@ using Services.Services;
 namespace PRM_ProductSale_G5.Controllers
 {
     [ApiController]
+    [Authorize]
     public class UserController(IServiceProvider serviceProvider) : Controller
     {
-        private readonly UserService _userService = serviceProvider.GetRequiredService<UserService>();
+        private readonly IUserService _userService = serviceProvider.GetRequiredService<IUserService>();
 
         [HttpGet]
         [Route(WebApiEndpoint.User.GetUsers)]

@@ -9,12 +9,18 @@ namespace PRM_ProductSale_G5.Controllers
     [ApiController]
     public class AuthController(IServiceProvider serviceProvider) : ControllerBase
     {
-        private readonly AuthService service = serviceProvider.GetRequiredService<AuthService>();
+        private readonly IAuthService service = serviceProvider.GetRequiredService<IAuthService>();
 
         [HttpGet(WebApiEndpoint.Authentication.Hello)]
         public IActionResult Hello()
         {
             return Ok(BaseResponse.OkResponseDto("Hello"));
+        }
+
+        [HttpGet(WebApiEndpoint.Authentication.GetAdminId)]
+        public async Task<IActionResult> GetAdminId()
+        {
+            return Ok(BaseResponse.OkResponseDto(await service.GetAdminIdAsync()));
         }
 
         [HttpPost(WebApiEndpoint.Authentication.Login)]

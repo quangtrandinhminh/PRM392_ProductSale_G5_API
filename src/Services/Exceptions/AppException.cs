@@ -1,15 +1,19 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Text.Json.Serialization;
+using Serilog;
 
 namespace Services.Exceptions
 {
     public class AppException : Exception
     {
+        private readonly ILogger _logger = Log.Logger;
+
         public AppException(string code, string message = "", int statusCode = StatusCodes.Status500InternalServerError)
             : base(message)
         {
             Code = code;
             StatusCode = statusCode;
+            _logger.Error("Error code: {code}, message: {message}", code, message);
         }
 
 

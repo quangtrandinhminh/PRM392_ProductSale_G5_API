@@ -4,7 +4,31 @@ using Repositories.Extensions;
 using Repositories.Models;
 
 namespace Repositories.Base;
-public class GenericRepository<T> where T : class
+
+public interface IGenericRepository<T> where T : class
+{
+    IQueryable<T> Set();
+    IQueryable<T?> GetAll();
+    Task<PaginatedList<T>> GetAllPaginatedQueryable(
+               int pageNumber,
+                      int pageSize,
+                      Expression<Func<T, bool>> predicate = null,
+                      params Expression<Func<T, object>>[]? includeProperties
+                  );
+    IQueryable<T> GetAllWithCondition(Expression<Func<T, bool>> predicate = null,
+               params Expression<Func<T, object>>[] includeProperties);
+    Task<IList<T>?> GetAllAsync();
+    Task<bool> IsExistAsync(Expression<Func<T, bool>> predicate);
+    Task<T> GetSingleAsync(Expression<Func<T, bool>> predicate,
+               params Expression<Func<T, object>>[] includeProperties);
+    void Create(T entity);
+    void Update(T entity);
+    bool Remove(T entity);
+    Task<int> SaveChangeAsync();
+    int SaveChange();
+    Task<T> AddAsync(T entity);
+}
+public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
     protected readonly AppDbContext _context;
 
@@ -102,7 +126,6 @@ public class GenericRepository<T> where T : class
     public async Task<T> GetSingleAsync(Expression<Func<T, bool>> predicate,
         params Expression<Func<T, object>>[] includeProperties)
     {
-
         var query = DbSet.AsQueryable();
 
         if (includeProperties != null)
@@ -124,8 +147,8 @@ public class GenericRepository<T> where T : class
 
     public void Update(T entity)
     {
-        var tracker = _context.Attach(entity);
-        tracker.State = EntityState.Modified;
+        _context.Entry(entity).State = EntityState.Modified;
+        _context.Update(entity);
     }
 
     public bool Remove(T entity)
@@ -142,6 +165,12 @@ public class GenericRepository<T> where T : class
     public int SaveChange()
     {
         return _context.SaveChanges();
+    }
+
+    public async Task<T> AddAsync(T entity)
+    {
+        var entry = await _context.AddAsync(entity);
+        return entry.Entity;
     }
 }
 

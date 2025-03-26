@@ -10,7 +10,13 @@ using Services.Exceptions;
 
 namespace Services.Services;
 
-public class CloudinaryService(IServiceProvider serviceProvider)
+public interface ICloudinaryService
+{
+    Task<string> UploadImageAsync(IFormFile file);
+    Task DeleteImageAsync(string imageUrl);
+}
+
+public class CloudinaryService(IServiceProvider serviceProvider) : ICloudinaryService
 {
     private readonly Cloudinary _cloudinary = new Cloudinary(CloudinarySetting.Instance.CloudinaryUrl);
     private readonly ILogger _logger = serviceProvider.GetRequiredService<ILogger>();
@@ -48,7 +54,7 @@ public class CloudinaryService(IServiceProvider serviceProvider)
         // Kiểm tra null hoặc rỗng
         if (file == null || file.Length == 0)
         {
-            throw new AppException(ResponseCodeConstants.NOT_FOUND, ResponseMessageImage.INVALID_FORMAT + "(null)",
+            throw new AppException(ResponseCodeConstants.NOT_FOUND, ResponseMessageConstrantsImage.INVALID_FORMAT + "(null)",
                 StatusCodes.Status404NotFound);
         }
 
@@ -56,14 +62,14 @@ public class CloudinaryService(IServiceProvider serviceProvider)
         var fileExtension = Path.GetExtension(file.FileName).ToLower();
         if (!validExtensions.Contains(fileExtension))
         {
-            throw new AppException(ResponseCodeConstants.BAD_REQUEST, ResponseMessageImage.INVALID_FORMAT + "(Accept: .jpg, .jpeg, .png, .gif)",
+            throw new AppException(ResponseCodeConstants.BAD_REQUEST, ResponseMessageConstrantsImage.INVALID_FORMAT + "(Accept: .jpg, .jpeg, .png, .gif)",
                 StatusCodes.Status400BadRequest);
         }
 
         // Kiểm tra kích thước file (tối đa 5MB)
         if (file.Length > 5 * 1024 * 1024)
         {
-            throw new AppException(ResponseCodeConstants.BAD_REQUEST, ResponseMessageImage.INVALID_SIZE,
+            throw new AppException(ResponseCodeConstants.BAD_REQUEST, ResponseMessageConstrantsImage.INVALID_SIZE,
                 StatusCodes.Status400BadRequest);
         }
     }
@@ -72,7 +78,7 @@ public class CloudinaryService(IServiceProvider serviceProvider)
     {
         if (string.IsNullOrEmpty(imageUrl))
         {
-            throw new AppException(ResponseCodeConstants.BAD_REQUEST, ResponseMessageImage.INVALID_URL + "(null)",
+            throw new AppException(ResponseCodeConstants.BAD_REQUEST, ResponseMessageConstrantsImage.INVALID_URL + "(null)",
                                StatusCodes.Status400BadRequest);
         }
 
@@ -84,7 +90,7 @@ public class CloudinaryService(IServiceProvider serviceProvider)
         if (!uri.Host.Equals(host, StringComparison.OrdinalIgnoreCase))
         {
             throw new AppException(ResponseCodeConstants.BAD_REQUEST,
-                ResponseMessageImage.INVALID_URL + $" Host required: {host}",
+                ResponseMessageConstrantsImage.INVALID_URL + $" Host required: {host}",
                                               StatusCodes.Status400BadRequest);
         }
 
@@ -94,7 +100,7 @@ public class CloudinaryService(IServiceProvider serviceProvider)
         if (segments.Length < 2 || !segments[0].Equals(cloudName, StringComparison.OrdinalIgnoreCase))
         {
             throw new AppException(ResponseCodeConstants.BAD_REQUEST,
-                ResponseMessageImage.INVALID_URL + $" CloudName required: {cloudName}",
+                ResponseMessageConstrantsImage.INVALID_URL + $" CloudName required: {cloudName}",
                                                              StatusCodes.Status400BadRequest);
         }
 
@@ -102,7 +108,7 @@ public class CloudinaryService(IServiceProvider serviceProvider)
         if (segments.Length < 4 || segments[1] != "image" || segments[2] != "upload")
         {
             throw new AppException(ResponseCodeConstants.BAD_REQUEST,
-                ResponseMessageImage.INVALID_URL + " (path structure)",
+                ResponseMessageConstrantsImage.INVALID_URL + " (path structure)",
                 StatusCodes.Status400BadRequest);
         }
 
@@ -117,7 +123,7 @@ public class CloudinaryService(IServiceProvider serviceProvider)
         if (!isValidPublicId)
         {
             throw new AppException(ResponseCodeConstants.BAD_REQUEST,
-                ResponseMessageImage.INVALID_URL + " (public ID)",
+                ResponseMessageConstrantsImage.INVALID_URL + " (public ID)",
           StatusCodes.Status400BadRequest);
         }
 

@@ -533,7 +533,8 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# JetBrains Rider
+# Cursor IDE
+.cursorrules
 
 # Environment file
 .env

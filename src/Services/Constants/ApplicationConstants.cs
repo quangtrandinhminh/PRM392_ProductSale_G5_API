@@ -127,6 +127,12 @@
         public const string EXISTED_DESCRIPTION = "Mô tả bị trùng với một loại sản phẩm khác.";
     }
 
+    public class ResponseMessageConstraintsCart
+    {
+        public const string NOT_FOUND = "Không tìm thấy giỏ hàng";
+        public const string NOT_FOUND_ITEM = "Không tìm thấy sản phẩm trong giỏ hàng";
+        public const string NOT_ALLOWED = "Bạn không được phép xem giỏ hàng này";
+    }
     public class ResponseMessageConstrantsOrder
     {
         public const string NOT_FOUND = "Không tìm thấy đơn hàng";
@@ -144,11 +150,28 @@
         public const string FEEDBACK_NOTFOUND = "Không tìm thấy đánh giá";
     }
 
-    public class ResponseMessageImage
+    public class ResponseMessageConstrantsImage
     {
         public const string INVALID_IMAGE = "Hình ảnh không hợp lệ. ";
         public const string INVALID_SIZE = "Kích thước hình ảnh không hợp lệ. ";
         public const string INVALID_FORMAT = "Định dạng hình ảnh không hợp lệ. ";
         public const string INVALID_URL = "Đường dẫn hình ảnh không hợp lệ. ";
     }
+
+    public class ResponseMessageConstraintsChat
+    {
+        public const string NOT_FOUND = "Không tìm thấy tin nhắn";
+        public const string FORBIDDEN_UPDATE = "Bạn không có quyền chỉnh sửa tin nhắn này";
+        public const string FORBIDDEN_DELETE = "Bạn không có quyền xóa tin nhắn này";
+    }
+
+    public class ResponseMessageConstraintsStoreLocation
+    {
+        public const string NOT_FOUND = "Không tìm thấy vị trí cửa hàng";
+        public const string EXISTED = "Vị trí cửa hàng đã tồn tại";
+        public const string INVALID_LATITUDE = "Vĩ độ không hợp lệ";
+        public const string INVALID_LONGITUDE = "Kinh độ không hợp lệ";
+    }
+
+
 }

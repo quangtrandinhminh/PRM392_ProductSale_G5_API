@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Services.Constants;
 using Services.Exceptions;
 using BaseResponse = Services.ApiModels.BaseResponse;
@@ -18,6 +19,7 @@ namespace PRM_ProductSale_G5.Middlewares
             _logger = logger;
         }
 
+        // handle exceptions
         public async Task Invoke(HttpContext context)
         {
             try
@@ -45,6 +47,7 @@ namespace PRM_ProductSale_G5.Middlewares
             }
         }
 
+        // get required roles from endpoint metadata
         private static string GetRequiredRoles(HttpContext context)
         {
             var endpoint = context.GetEndpoint();
@@ -53,6 +56,7 @@ namespace PRM_ProductSale_G5.Middlewares
             return authorizeData?.Roles;
         }
 
+        // handle 401 error
         public static Task HandleUnauthorizedAsync(HttpContext context)
         {
             var response = context.Response;
@@ -60,11 +64,11 @@ namespace PRM_ProductSale_G5.Middlewares
             response.StatusCode = StatusCodes.Status401Unauthorized;
 
             var message = "You need AccessToken to access this resource. If token was provided, it may be invalid or expired";
-            var data = new BaseResponse(response.StatusCode, ResponseCodeConstants.UNAUTHORIZED, message);
-            var result = JsonConvert.SerializeObject(data, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+            var result = ParseResponse(response, ResponseCodeConstants.UNAUTHORIZED, message);
             return context.Response.WriteAsync(result);
         }
 
+        // handle 403 error
         private static Task HandleForbiddenAsync(HttpContext context, string requiredRoles = null)
         {
             var response = context.Response;
@@ -75,31 +79,41 @@ namespace PRM_ProductSale_G5.Middlewares
                 ? ResponseMessageIdentity.USER_NOT_ALLOWED + $" You need '{requiredRoles}' role to access this resource."
                 : ResponseMessageIdentity.USER_NOT_ALLOWED;
 
-            var data = new BaseResponse(response.StatusCode, ResponseCodeConstants.FORBIDDEN, message);
-            var result = JsonConvert.SerializeObject(data, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+            var result = ParseResponse(response, ResponseCodeConstants.FORBIDDEN, message);
             return context.Response.WriteAsync(result);
         }
 
+        // handle 400 error
         private static async Task HandleExceptionAsync(HttpContext context, AppException ex)
         {
             var response = context.Response;
             response.ContentType = "application/json";
             response.StatusCode = ex.StatusCode;
 
-            var data = new BaseResponse(response.StatusCode, ex.Code, ex.Message);
-            var result = JsonConvert.SerializeObject(data, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+            var result = ParseResponse(response, ResponseCodeConstants.BAD_REQUEST, ex.Message);
             await response.WriteAsync(result);
         }
 
+        // handle 500 error
         private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
             var response = context.Response;
             response.ContentType = "application/json";
             response.StatusCode = StatusCodes.Status500InternalServerError;
 
-            var data = new BaseResponse(response.StatusCode, ResponseCodeConstants.INTERNAL_SERVER_ERROR, ex.Message);
-            var result = JsonConvert.SerializeObject(data, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+            var result = ParseResponse(response, ResponseCodeConstants.INTERNAL_SERVER_ERROR, ex.Message);
             await response.WriteAsync(result);
+        }
+
+        // parse response to json
+        private static String ParseResponse(HttpResponse response, string code, string message)
+        {
+            var data = new BaseResponse(response.StatusCode, code, message);
+            return JsonConvert.SerializeObject(data, new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
         }
     }
 }

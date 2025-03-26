@@ -4,10 +4,13 @@ using Repositories.Models;
 using Riok.Mapperly.Abstractions;
 using Services.ApiModels.Cart;
 using Services.ApiModels.Category;
+using Services.ApiModels.Chat;
+using Services.ApiModels.Notification;
 using Services.ApiModels.Order;
 using Services.ApiModels.PaginatedList;
 using Services.ApiModels.Product;
 using Services.ApiModels.User;
+using Services.ApiModels.UserDevice;
 
 namespace Services.Mapper;
 
@@ -32,7 +35,7 @@ public partial class MapperlyMapper
     public partial Product Map(ProductCreateRequest request);
     public partial void Map(ProductUpdateRequest request, Product entity);
     public partial ProductResponse Map(Product entity);
-    public partial PaginatedListResponse<ProductResponse> Map(PaginatedListResponse<Product> entity);
+    public partial PaginatedListResponse<ProductResponse> Map(PaginatedList<Product> entity);
 
     // category
     public partial Category Map(CategoryCreateRequest request);
@@ -69,4 +72,21 @@ public partial class MapperlyMapper
     {
         return JsonSerializer.Deserialize<List<double>>(jsonString);
     }
+
+    // ChatMessage mappings
+    public partial ChatMessage Map(ChatMessageCreateRequest request);
+    public partial void Map(ChatMessageUpdateRequest request, ChatMessage entity);
+    public partial ChatMessageDto Map(ChatMessage entity);
+    public partial PaginatedListResponse<ChatMessageDto> Map(PaginatedList<ChatMessage> entity);
+    
+    // Notification mappings
+    public partial Notification Map(NotificationCreateRequest request);
+    public partial void Map(NotificationUpdateRequest request, Notification entity);
+    public partial NotificationDto Map(Notification entity);
+    public partial PaginatedListResponse<NotificationDto> Map(PaginatedList<Notification> entity);
+
+    // UserDevice mappings
+    public partial UserDevice Map(UserDeviceRegisterRequest request);
+    public partial UserDeviceDto Map(UserDevice entity);
+    public partial IEnumerable<UserDeviceDto> Map(IEnumerable<UserDevice> entities);
 }

@@ -1,7 +1,9 @@
-﻿namespace Service.ApiModels.VNPay;
-
-public class VnPaymentRequest
+﻿namespace Service.ApiModels.VNPay
 {
-    public int OrderId { get; set; }
-    public string ReturnUrl { get; set; }
+    public class VnPaymentRequest
+    {
+        // Mã đơn hàng của merchant
+        public int OrderId { get; set; }
+
+    }
 }
