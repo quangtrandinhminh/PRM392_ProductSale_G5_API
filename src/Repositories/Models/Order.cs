@@ -17,7 +17,7 @@ public partial class Order
 
     public string OrderStatus { get; set; } = null!;
 
-    public DateTime? OrderDate { get; set; }
+    public DateTime OrderDate { get; set; }
 
     public virtual Cart? Cart { get; set; }
 
