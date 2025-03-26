@@ -164,4 +164,14 @@
         public const string FORBIDDEN_UPDATE = "Bạn không có quyền chỉnh sửa tin nhắn này";
         public const string FORBIDDEN_DELETE = "Bạn không có quyền xóa tin nhắn này";
     }
+
+    public class ResponseMessageConstraintsStoreLocation
+    {
+        public const string NOT_FOUND = "Không tìm thấy vị trí cửa hàng";
+        public const string EXISTED = "Vị trí cửa hàng đã tồn tại";
+        public const string INVALID_LATITUDE = "Vĩ độ không hợp lệ";
+        public const string INVALID_LONGITUDE = "Kinh độ không hợp lệ";
+    }
+
+
 }
