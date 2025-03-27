@@ -23,6 +23,8 @@ public interface INotificationService
     Task<bool> MarkAsReadAsync(int notificationId);
     Task<bool> MarkAllAsReadAsync(int userId);
     Task<NotificationDto> CreateCartNotificationAsync(int userId, int itemCount);
+    Task<bool> SendNotificationToAllUsersAsync(string message, string title = "Thông báo mới");
+    Task<PaginatedListResponse<BroadcastNotificationDto>> GetBroadcastNotificationsAsync(int pageNumber, int pageSize);
 }
 
 public class NotificationService : INotificationService
@@ -33,6 +35,7 @@ public class NotificationService : INotificationService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IFirebaseService _firebaseService;
     private readonly IUserDeviceRepository _userDeviceRepository;
+    private readonly IUserRepository _userRepository;
     
     public NotificationService(IServiceProvider serviceProvider)
     {
@@ -42,13 +45,14 @@ public class NotificationService : INotificationService
         _httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
         _firebaseService = serviceProvider.GetRequiredService<IFirebaseService>();
         _userDeviceRepository = serviceProvider.GetRequiredService<IUserDeviceRepository>();
+        _userRepository = serviceProvider.GetRequiredService<IUserRepository>();
     }
     
     public async Task<PaginatedListResponse<NotificationDto>> GetNotificationsByUserIdAsync(int userId, int pageNumber, int pageSize)
     {
         _logger.Information($"Getting notifications for user {userId}, page {pageNumber}, size {pageSize}");
         var notifications = await _notificationRepository.GetNotificationsByUserIdAsync(userId, pageNumber, pageSize);
-        return _mapper.Map(notifications);
+        return _mapper.MapNotificationList(notifications);
     }
     
     public async Task<NotificationDto> GetNotificationByIdAsync(int id)
@@ -61,21 +65,21 @@ public class NotificationService : INotificationService
                 "Không tìm thấy thông báo", StatusCodes.Status404NotFound);
         }
         
-        return _mapper.Map(notification);
+        return _mapper.MapNotification(notification);
     }
     
     public async Task<NotificationDto> CreateNotificationAsync(NotificationCreateRequest request)
     {
         _logger.Information($"Creating notification for user {request.UserId}");
         
-        var notification = _mapper.Map(request);
+        var notification = _mapper.MapNotificationRequest(request);
         notification.CreatedAt = DateTime.UtcNow;
         notification.IsRead = false;
         
         await _notificationRepository.AddAsync(notification);
         await _notificationRepository.SaveChangeAsync();
         
-        var result = _mapper.Map(notification);
+        var result = _mapper.MapNotification(notification);
         
         // Gửi thông báo đẩy qua Firebase
         await SendPushNotificationAsync(notification);
@@ -129,7 +133,7 @@ public class NotificationService : INotificationService
                 "Bạn không có quyền chỉnh sửa thông báo này", StatusCodes.Status403Forbidden);
         }
         
-        _mapper.Map(request, notification);
+        _mapper.MapNotificationUpdate(request, notification);
         _notificationRepository.Update(notification);
         
         return await _notificationRepository.SaveChangeAsync();
@@ -177,6 +181,57 @@ public class NotificationService : INotificationService
         return await _notificationRepository.MarkAllAsReadAsync(userId);
     }
     
+    public async Task<bool> SendNotificationToAllUsersAsync(string message, string title = "Thông báo mới")
+    {
+        _logger.Information("Sending notification to all users: {Message}", message);
+        
+        try
+        {
+            // Lấy danh sách tất cả người dùng
+            var users = await _userRepository.GetAllAsync();
+            var successCount = 0;
+            
+            foreach (var user in users)
+            {
+                // Tạo thông báo cho mỗi người dùng trong hệ thống
+                var notificationRequest = new NotificationCreateRequest
+                {
+                    UserId = user.UserId,
+                    Message = message
+                };
+                
+                try
+                {
+                    await CreateNotificationAsync(notificationRequest);
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Error creating notification for user {UserId}", user.UserId);
+                }
+            }
+            
+            // Gửi thông báo chủ đề cho tất cả người dùng (nếu cần)
+            var data = new Dictionary<string, string>
+            {
+                { "type", "BROADCAST" },
+                { "timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+            };
+            
+            await _firebaseService.SendNotificationToTopicAsync("all_users", title, message, data);
+            
+            _logger.Information("Successfully sent notifications to {SuccessCount}/{TotalCount} users", 
+                successCount, users.Count);
+                
+            return successCount > 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Error sending notification to all users");
+            return false;
+        }
+    }
+    
     public async Task<NotificationDto> CreateCartNotificationAsync(int userId, int itemCount)
     {
         var request = new NotificationCreateRequest
@@ -209,5 +264,12 @@ public class NotificationService : INotificationService
         }
         
         return notification;
+    }
+    
+    public async Task<PaginatedListResponse<BroadcastNotificationDto>> GetBroadcastNotificationsAsync(int pageNumber, int pageSize)
+    {
+        _logger.Information($"Getting broadcast notifications, page {pageNumber}, size {pageSize}");
+        var notifications = await _notificationRepository.GetBroadcastNotificationsAsync(pageNumber, pageSize);
+        return _mapper.MapBroadcastNotificationList(notifications);
     }
 }

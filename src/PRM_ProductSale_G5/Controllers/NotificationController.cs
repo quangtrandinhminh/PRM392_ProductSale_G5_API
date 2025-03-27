@@ -19,13 +19,16 @@ namespace PRM_ProductSale_G5.Controllers
         private readonly INotificationService _notificationService;
         private readonly IHubContext<NotificationHub> _notificationHubContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IFirebaseService _firebaseService;
+        private readonly IUserDeviceService _userDeviceService;
         
         public NotificationController(IServiceProvider serviceProvider)
         {
             _notificationService = serviceProvider.GetRequiredService<INotificationService>();
             _notificationHubContext = serviceProvider.GetRequiredService<IHubContext<NotificationHub>>();
             _httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-          
+            _firebaseService = serviceProvider.GetRequiredService<IFirebaseService>();
+            _userDeviceService = serviceProvider.GetRequiredService<IUserDeviceService>();
         }
         
         [HttpGet]
@@ -71,6 +74,59 @@ namespace PRM_ProductSale_G5.Controllers
             }
             
             return Ok(BaseResponse.OkResponseDto(notification));
+        }
+        
+        [HttpGet]
+        [Route(WebApiEndpoint.Notification.GetBroadcastNotifications)]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetBroadcastNotifications([FromQuery] PaginatedListRequest request)
+        {
+            var broadcastNotifications = await _notificationService.GetBroadcastNotificationsAsync(
+                request.PageNumber, request.PageSize);
+                
+            return Ok(BaseResponse.OkResponseDto(broadcastNotifications));
+        }
+        
+        [HttpPost]
+        [Route(WebApiEndpoint.Notification.SendNotificationToAllUsers)]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SendNotificationToAllUsers([FromBody] SendNotificationToAllRequest request)
+        {
+            var result = await _notificationService.SendNotificationToAllUsersAsync(request.Message, request.Title);
+            
+            // Thông báo cho tất cả người dùng qua SignalR
+            await _notificationHubContext.Clients.All.SendAsync("ReceiveBroadcastNotification", new 
+            { 
+                Title = request.Title, 
+                Message = request.Message, 
+                Timestamp = DateTime.UtcNow 
+            });
+            
+            // Gửi Firebase Push Notification đến tất cả người dùng (theo chủ đề)
+            try
+            {
+                // Chuẩn bị dữ liệu
+                var data = new Dictionary<string, string>
+                {
+                    { "type", "broadcast" },
+                    { "timestamp", DateTime.UtcNow.ToString("o") }
+                };
+                
+                // Gửi thông báo đến chủ đề "all-users"
+                await _firebaseService.SendNotificationToTopicAsync(
+                    "all-users",
+                    request.Title,
+                    request.Message,
+                    data
+                );
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi nhưng không ngăn việc trả về kết quả
+                Console.WriteLine($"Lỗi khi gửi Firebase broadcast notification: {ex.Message}");
+            }
+            
+            return Ok(BaseResponse.OkResponseDto(result));
         }
         
         [HttpPut]
