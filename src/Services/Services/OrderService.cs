@@ -20,7 +20,7 @@ public interface IOrderService
 {
     Task<OrderResponse> CreateOrderAsync(OrderRequest request, HttpContext context);
     Task<OrderResponse> GetOrderByIdAsync(int orderId);
-    Task<List<OrderResponse>> GetOrdersByUserAsync();
+    Task<List<OrderResponse>> GetOrdersByUserAsync(string? status = null);
     Task<int> UpdateOrderStatusAsync(int orderId, string newStatus);
     Task<int> DeleteOrderAsync(int orderId);
 
@@ -58,19 +58,7 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
         await _orderRepository.SaveChangeAsync();
 
         _logger.Information("Order {OrderId} created successfully", order.OrderId);
-
         var orderResponse = new OrderResponse();
-        if (orderResponse.PaymentMethod == PaymentMethodEnum.VnPay.ToString())
-        {
-            // Use IVnPayService to create the payment URL
-            var vnPayRequest = new VnPaymentRequest
-            {
-                OrderId = order.OrderId,
-            };
-
-            orderResponse.PaymentUrl = await _vnPayService.CreatePaymentUrl(context, vnPayRequest);
-        }
-
         return orderResponse;
     }
     public async Task<OrderResponse> GetOrderByIdAsync(int orderId)
@@ -80,11 +68,17 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
         return _mapper.Map(order);
     }
 
-    public async Task<List<OrderResponse>> GetOrdersByUserAsync()
+    public async Task<List<OrderResponse>> GetOrdersByUserAsync(string? status)
     {
         var userId = JwtClaimUltils.GetUserId(JwtClaimUltils.GetLoginedUser(_httpContextAccessor));
-        _logger.Information("Fetching orders for UserId: {UserId}", userId);
-        var orders = await _orderRepository.GetAllWithCondition(x => x.UserId == userId).ToListAsync();
+        IQueryable<Order> query = _orderRepository.GetAllWithCondition(x => x.UserId == userId);
+
+        if (!string.IsNullOrEmpty(status))
+        {
+            query = query.Where(x => x.OrderStatus.ToLower() == status.ToLower());
+        }
+
+        var orders = await query.ToListAsync();
         return orders.Select(_mapper.Map).ToList();
     }
 
