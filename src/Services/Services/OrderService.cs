@@ -89,6 +89,8 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
     public async Task<List<OrderResponse>> GetOrdersByUserAsync(string status)
     {
         var userId = JwtClaimUltils.GetUserId(JwtClaimUltils.GetLoginedUser(_httpContextAccessor));
+
+        _logger.Information("Fetching orders for UserId: {userId} with status {status}", userId, status);
         IQueryable<Order> query = _orderRepository.GetAllWithCondition(x => x.UserId == userId);
 
         if (!string.IsNullOrEmpty(status))
@@ -142,6 +144,8 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
 
     public async Task<List<OrderResponse>> GetOrdersByStatusAsync(string? status)
     {
+        _logger.Information("Fetching orders with status {status}", status);
+
         // Kiểm tra nếu status là null hoặc rỗng, lấy tất cả đơn hàng
         bool getAllOrders = string.IsNullOrEmpty(status);
 
