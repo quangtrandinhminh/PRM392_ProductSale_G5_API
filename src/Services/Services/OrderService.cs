@@ -53,15 +53,32 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
             throw new AppException(ResponseCodeConstants.BAD_REQUEST, "Cart does not exist", StatusCodes.Status400BadRequest);
         }
 
-        var order = _mapper.Map(request);
-        order.UserId = userId;
+        // Tạo mới đối tượng Order và gán giá trị từ request
+        var order = new Order
+        {
+            CartId = request.CartId,
+            BillingAddress = request.BillingAddress,
+            UserId = userId,
+            OrderStatus = "WaitForPayment",
+            OrderDate = DateTime.UtcNow,
+            PaymentMethod = "ZaloPay"
+        };
+
         _orderRepository.Create(order);
         await _orderRepository.SaveChangeAsync();
 
         _logger.Information("Order {OrderId} created successfully", order.OrderId);
-        var orderResponse = new OrderResponse();
-        return orderResponse;
+
+        return new OrderResponse
+        {
+            OrderId = order.OrderId,
+            CartId = order.CartId,
+            BillingAddress = order.BillingAddress,
+            OrderStatus = order.OrderStatus,
+            OrderDate = order.OrderDate
+        };
     }
+
     public async Task<OrderResponse> GetOrderByIdAsync(int orderId)
     {
         _logger.Information("Fetching order with Id: {OrderId}", orderId);
