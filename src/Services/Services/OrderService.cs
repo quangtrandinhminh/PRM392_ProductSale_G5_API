@@ -84,7 +84,8 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
 
     public async Task<int> UpdateOrderStatusAsync(int orderId, string newStatus)
     {
-        _logger.Information("Updating order {OrderId} status to {Status}", orderId, newStatus);
+        var loginedUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
+        var userId = JwtClaimUltils.GetUserId(loginedUser);
         var order = await GetOrderById(orderId);
 
         var validStatuses = new List<string> { "Pending", "Paid", "Shipped", "Completed", "Cancelled" };
@@ -93,10 +94,24 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
             throw new AppException(ResponseCodeConstants.BAD_REQUEST, "Invalid order status", StatusCodes.Status400BadRequest);
         }
 
+        // Cập nhật trạng thái của Order
         order.OrderStatus = newStatus;
         _orderRepository.Update(order);
+
+        // Tìm cart liên quan đến order
+        var cart = await _cartRepository.GetCartByUserIdAsync(userId, CartEnum.Active.ToString());
+        if (cart != null)
+        {
+            // Xác định trạng thái mới cho Cart dựa trên trạng thái Order
+            cart.Status = CartEnum.Inactive.ToString();
+
+            _cartRepository.Update(cart);
+            await _cartRepository.SaveChangeAsync();
+        }
+
         return await _orderRepository.SaveChangeAsync();
     }
+
 
     public async Task<int> DeleteOrderAsync(int orderId)
     {
