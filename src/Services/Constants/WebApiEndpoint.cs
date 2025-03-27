@@ -52,7 +52,7 @@ namespace Services.Constants
             public const string CreateOrder = BaseEndpoint;
             public const string DeleteOrder = BaseEndpoint + "/{orderId}";
             public const string GetOrdersByUser = BaseEndpoint + "/user/status";
-            public const string UpdateOrderStatus = BaseEndpoint + "/{orderId}/status";
+            public const string UpdateOrderStatus = BaseEndpoint + "/{orderId}/newStatus";
             public const string GetOrdersByStatus = BaseEndpoint + "/status";
             public const string CustomerChangeOrderStatus = BaseEndpoint + "customer/{orderId}";
             public const string AdminChangeOrderStatus = BaseEndpoint + "admin/{orderId}";
