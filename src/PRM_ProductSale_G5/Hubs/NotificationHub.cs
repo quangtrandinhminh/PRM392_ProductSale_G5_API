@@ -20,7 +20,7 @@ public class NotificationHub : Hub
         await base.OnConnectedAsync();
     }
     
-    public override async Task OnDisconnectedAsync(Exception exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var user = Context.User;
         var userId = JwtClaimUltils.GetUserId(user);

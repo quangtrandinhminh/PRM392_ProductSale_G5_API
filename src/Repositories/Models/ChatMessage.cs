@@ -13,6 +13,8 @@ public partial class ChatMessage
 
     public int? UserId { get; set; }
 
+    public int? ReceiverId { get; set; }
+
     public string Message { get; set; }
 
     public DateTime SentAt { get; set; }
@@ -20,4 +22,6 @@ public partial class ChatMessage
     public bool IsRead { get; set; }
 
     public virtual User User { get; set; }
+    
+    public virtual User Receiver { get; set; }
 }

@@ -100,6 +100,8 @@ namespace Services.Constants
             public const string DeleteChatMessage = $"{Prefix}/{{id}}";
             public const string GetUnreadCount = $"{Prefix}/unread-count";
             public const string MarkAsRead = $"{Prefix}/{{id}}/read";
+            public const string GetConversationInfo = $"{Prefix}/conversation-info/{{otherUserId}}";
+            public const string GetConversationList = $"{Prefix}/conversations";
         }
 
         public static class Notification
@@ -115,6 +117,8 @@ namespace Services.Constants
             public const string MarkAsRead = $"{Prefix}/{{id}}/read";
             public const string MarkAllAsRead = $"{Prefix}/read-all";
             public const string CreateCartNotification = $"{Prefix}/cart";
+            public const string SendNotificationToAllUsers = $"{Prefix}/send-to-all";
+            public const string GetBroadcastNotifications = $"{Prefix}/broadcasts";
         }
 
         public static class Payment
