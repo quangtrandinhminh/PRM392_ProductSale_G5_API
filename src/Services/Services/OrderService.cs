@@ -20,7 +20,8 @@ public interface IOrderService
 {
     Task<OrderResponse> CreateOrderAsync(OrderRequest request, HttpContext context);
     Task<OrderResponse> GetOrderByIdAsync(int orderId);
-    Task<List<OrderResponse>> GetOrdersByUserAsync(string? status = null);
+
+    Task<List<OrderResponse>> GetOrdersByUserAsync(string status);
     Task<int> UpdateOrderStatusAsync(int orderId, string newStatus);
     Task<int> DeleteOrderAsync(int orderId);
 
@@ -68,7 +69,7 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
         return _mapper.Map(order);
     }
 
-    public async Task<List<OrderResponse>> GetOrdersByUserAsync(string? status)
+    public async Task<List<OrderResponse>> GetOrdersByUserAsync(string status)
     {
         var userId = JwtClaimUltils.GetUserId(JwtClaimUltils.GetLoginedUser(_httpContextAccessor));
         IQueryable<Order> query = _orderRepository.GetAllWithCondition(x => x.UserId == userId);
