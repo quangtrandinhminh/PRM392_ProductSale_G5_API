@@ -73,17 +73,17 @@ public partial class MapperlyMapper
         return JsonSerializer.Deserialize<List<double>>(jsonString);
     }
 
-    // ChatMessage mappings
-    public partial ChatMessage Map(ChatMessageCreateRequest request);
-    public partial void Map(ChatMessageUpdateRequest request, ChatMessage entity);
-    public partial ChatMessageDto Map(ChatMessage entity);
-    public partial PaginatedListResponse<ChatMessageDto> Map(PaginatedList<ChatMessage> entity);
+    // ChatMessage mappings - đã được chuyển sang ChatMessageMapper.cs
+    // public partial ChatMessage Map(ChatMessageCreateRequest request);
+    // public partial void Map(ChatMessageUpdateRequest request, ChatMessage entity);
+    // public partial ChatMessageDto Map(ChatMessage entity);
+    // public partial PaginatedListResponse<ChatMessageDto> Map(PaginatedList<ChatMessage> entity);
     
-    // Notification mappings
-    public partial Notification Map(NotificationCreateRequest request);
-    public partial void Map(NotificationUpdateRequest request, Notification entity);
-    public partial NotificationDto Map(Notification entity);
-    public partial PaginatedListResponse<NotificationDto> Map(PaginatedList<Notification> entity);
+    // Notification mappings - đã được chuyển sang MapperlyMapper.cs
+    // public partial Notification Map(NotificationCreateRequest request);
+    // public partial void Map(NotificationUpdateRequest request, Notification entity);
+    // public partial NotificationDto Map(Notification entity);
+    // public partial PaginatedListResponse<NotificationDto> Map(PaginatedList<Notification> entity);
 
     // UserDevice mappings
     public partial UserDevice Map(UserDeviceRegisterRequest request);

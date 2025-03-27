@@ -33,7 +33,7 @@ namespace PRM_ProductSale_G5.Middlewares
                 if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
                 {
                     var roles = GetRequiredRoles(context);
-                    await HandleForbiddenAsync(context, roles);
+                    await HandleForbiddenAsync(context, roles ?? string.Empty);
                 }
             }
             catch (AppException ex)
@@ -48,7 +48,7 @@ namespace PRM_ProductSale_G5.Middlewares
         }
 
         // get required roles from endpoint metadata
-        private static string GetRequiredRoles(HttpContext context)
+        private static string? GetRequiredRoles(HttpContext context)
         {
             var endpoint = context.GetEndpoint();
             var authorizeData = endpoint?.Metadata?.GetMetadata<IAuthorizeData>();
@@ -69,7 +69,7 @@ namespace PRM_ProductSale_G5.Middlewares
         }
 
         // handle 403 error
-        private static Task HandleForbiddenAsync(HttpContext context, string requiredRoles = null)
+        private static Task HandleForbiddenAsync(HttpContext context, string requiredRoles)
         {
             var response = context.Response;
             response.ContentType = "application/json";
