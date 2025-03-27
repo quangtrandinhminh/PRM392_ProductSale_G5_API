@@ -20,6 +20,7 @@ public interface IOrderService
 {
     Task<OrderResponse> CreateOrderAsync(OrderRequest request, HttpContext context);
     Task<OrderResponse> GetOrderByIdAsync(int orderId);
+
     Task<List<OrderResponse>> GetOrdersByUserAsync(string status);
     Task<int> UpdateOrderStatusAsync(int orderId, string newStatus);
     Task<int> DeleteOrderAsync(int orderId);
@@ -58,19 +59,7 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
         await _orderRepository.SaveChangeAsync();
 
         _logger.Information("Order {OrderId} created successfully", order.OrderId);
-
         var orderResponse = new OrderResponse();
-        if (orderResponse.PaymentMethod == PaymentMethodEnum.VnPay.ToString())
-        {
-            // Use IVnPayService to create the payment URL
-            var vnPayRequest = new VnPaymentRequest
-            {
-                OrderId = order.OrderId,
-            };
-
-            orderResponse.PaymentUrl = await _vnPayService.CreatePaymentUrl(context, vnPayRequest);
-        }
-
         return orderResponse;
     }
     public async Task<OrderResponse> GetOrderByIdAsync(int orderId)
@@ -96,7 +85,8 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
 
     public async Task<int> UpdateOrderStatusAsync(int orderId, string newStatus)
     {
-        _logger.Information("Updating order {OrderId} status to {Status}", orderId, newStatus);
+        var loginedUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
+        var userId = JwtClaimUltils.GetUserId(loginedUser);
         var order = await GetOrderById(orderId);
 
         var validStatuses = new List<string> { "Pending", "Paid", "Shipped", "Completed", "Cancelled" };
@@ -105,10 +95,24 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
             throw new AppException(ResponseCodeConstants.BAD_REQUEST, "Invalid order status", StatusCodes.Status400BadRequest);
         }
 
+        // Cập nhật trạng thái của Order
         order.OrderStatus = newStatus;
         _orderRepository.Update(order);
+
+        // Tìm cart liên quan đến order
+        var cart = await _cartRepository.GetCartByUserIdAsync(userId, CartEnum.Active.ToString());
+        if (cart != null)
+        {
+            // Xác định trạng thái mới cho Cart dựa trên trạng thái Order
+            cart.Status = CartEnum.Inactive.ToString();
+
+            _cartRepository.Update(cart);
+            await _cartRepository.SaveChangeAsync();
+        }
+
         return await _orderRepository.SaveChangeAsync();
     }
+
 
     public async Task<int> DeleteOrderAsync(int orderId)
     {
