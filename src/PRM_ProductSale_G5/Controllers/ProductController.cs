@@ -45,7 +45,7 @@ namespace PRM_ProductSale_G5.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [Route(WebApiEndpoint.Product.CreateProduct)]
-        public async Task<IActionResult> CreateProduct([FromForm] ProductCreateRequest request)
+        public async Task<IActionResult> CreateProduct([FromBody] ProductCreateRequest request)
         {
             return Ok(BaseResponse.OkResponseDto(await _productService.CreateProductAsync(request)));
         }
@@ -53,7 +53,7 @@ namespace PRM_ProductSale_G5.Controllers
         [HttpPut]
         [Authorize(Roles = "Admin")]
         [Route(WebApiEndpoint.Product.UpdateProduct)]
-        public async Task<IActionResult> UpdateProduct([FromForm] ProductUpdateRequest request)
+        public async Task<IActionResult> UpdateProduct([FromBody] ProductUpdateRequest request)
         {
             return Ok(BaseResponse.OkResponseDto(await _productService.UpdateProductAsync(request)));
         }
