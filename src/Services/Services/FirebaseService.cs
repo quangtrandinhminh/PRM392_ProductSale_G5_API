@@ -7,6 +7,47 @@ using Services.Config;
 
 namespace Services.Services;
 
+// Lớp singleton để khởi tạo Firebase
+public static class FirebaseInitializer
+{
+    private static readonly object Lock = new object();
+    private static bool _initialized = false;
+
+    public static void Initialize()
+    {
+        if (_initialized) return;
+
+        lock (Lock)
+        {
+            if (_initialized) return;
+
+            if (FirebaseApp.DefaultInstance == null)
+            {
+                var credentials = GoogleCredential.FromJson(JsonSerializer.Serialize(new
+                {
+                    type = "service_account",
+                    project_id = FirebaseSetting.Instance.ProjectId,
+                    private_key_id = "", // Không cần thiết
+                    private_key = FirebaseSetting.Instance.PrivateKey,
+                    client_email = FirebaseSetting.Instance.ClientEmail,
+                    client_id = "", // Không cần thiết
+                    auth_uri = "https://accounts.google.com/o/oauth2/auth",
+                    token_uri = "https://oauth2.googleapis.com/token",
+                    auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs",
+                    client_x509_cert_url = $"https://www.googleapis.com/robot/v1/metadata/x509/{FirebaseSetting.Instance.ClientEmail.Replace("@", "%40")}"
+                }));
+                
+                FirebaseApp.Create(new AppOptions
+                {
+                    Credential = credentials
+                });
+            }
+
+            _initialized = true;
+        }
+    }
+}
+
 public interface IFirebaseService
 {
     Task<bool> SendNotificationAsync(string deviceToken, string title, string body, Dictionary<string, string> data);
@@ -22,28 +63,8 @@ public class FirebaseService : IFirebaseService
     {
         _logger = logger;
         
-        // Khởi tạo Firebase Admin SDK nếu chưa được khởi tạo
-        if (FirebaseApp.DefaultInstance == null)
-        {
-            var credentials = GoogleCredential.FromJson(JsonSerializer.Serialize(new
-            {
-                type = "service_account",
-                project_id = FirebaseSetting.Instance.ProjectId,
-                private_key_id = "", // Không cần thiết
-                private_key = FirebaseSetting.Instance.PrivateKey,
-                client_email = FirebaseSetting.Instance.ClientEmail,
-                client_id = "", // Không cần thiết
-                auth_uri = "https://accounts.google.com/o/oauth2/auth",
-                token_uri = "https://oauth2.googleapis.com/token",
-                auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs",
-                client_x509_cert_url = $"https://www.googleapis.com/robot/v1/metadata/x509/{FirebaseSetting.Instance.ClientEmail.Replace("@", "%40")}"
-            }));
-            
-            FirebaseApp.Create(new AppOptions
-            {
-                Credential = credentials
-            });
-        }
+        // Sử dụng initializer thay vì khởi tạo trực tiếp
+        FirebaseInitializer.Initialize();
         
         _messaging = FirebaseMessaging.DefaultInstance;
     }

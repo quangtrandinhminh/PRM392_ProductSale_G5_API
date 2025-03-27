@@ -36,7 +36,8 @@ namespace Services.Services
         public async Task<PaginatedListResponse<ProductResponse>> GetAllProductsAsync(int pageNumber, int pageSize)
         {
             _logger.Information($"Getting {pageSize} products at page {pageNumber}");
-            var products = await _productRepository.GetAllPaginatedQueryable(pageNumber, pageSize);
+            var products = await _productRepository.GetAllPaginatedQueryable(pageNumber, pageSize, 
+                includeProperties: _ => _.Category);
             if (products is null)
             {
                 throw new AppException(ResponseCodeConstants.BAD_REQUEST,
