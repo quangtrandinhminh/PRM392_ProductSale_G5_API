@@ -66,7 +66,9 @@ public class CartService(IServiceProvider serviceProvider) : ICartService
         }
 
         // Fetch the cart including its items
-        var cart = await _cartRepository.GetSingleAsync(c => c.UserId == userId, c => c.CartItems);
+        var cart = await _cartRepository.GetSingleAsync(c => c.UserId == userId
+            && c.Status == CartEnum.Active.ToString()
+            , c => c.CartItems);
         var result = 0;
 
         // If cart does not exist, create a new one with an empty CartItems list.
