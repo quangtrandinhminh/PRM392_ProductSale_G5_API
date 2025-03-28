@@ -81,7 +81,7 @@ public class ChatMessageService : IChatMessageService
             UserId = userId,
             ReceiverId = request.ReceiverId,
             Message = request.Message,
-            SentAt = DateTime.UtcNow,
+            SentAt = DateTime.UtcNow.AddHours(7),
             IsRead = false
         };
         
