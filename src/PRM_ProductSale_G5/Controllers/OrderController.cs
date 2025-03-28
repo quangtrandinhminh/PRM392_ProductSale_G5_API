@@ -69,9 +69,10 @@ namespace PRM_ProductSale_G5.Controllers
 
         [HttpGet]
         [Route(WebApiEndpoint.Order.GetOrdersByUser)]
-        public async Task<IActionResult> GetOrdersByUser([FromRoute] int userId)
+        public async Task<IActionResult> GetOrdersByUser([FromQuery] string status)
         {
-            return Ok(BaseResponse.OkResponseDto(await _orderService.GetOrdersByUserAsync()));
+            var orders = await _orderService.GetOrdersByUserAsync(status);
+            return Ok(BaseResponse.OkResponseDto(orders));
         }
 
         [HttpPut]
@@ -184,6 +185,7 @@ namespace PRM_ProductSale_G5.Controllers
         {
             return Ok(BaseResponse.OkResponseDto(await _orderService.GetOrdersByStatusAsync(status)));
         }
+
         
         /// <summary>
         /// Gửi thông báo cho người dùng khi có thay đổi trong đơn hàng
