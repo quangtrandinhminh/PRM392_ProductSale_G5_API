@@ -73,7 +73,7 @@ public class NotificationService : INotificationService
         _logger.Information($"Creating notification for user {request.UserId}");
         
         var notification = _mapper.MapNotificationRequest(request);
-        notification.CreatedAt = DateTime.UtcNow;
+        notification.CreatedAt = DateTime.UtcNow.AddHours(7);
         notification.IsRead = false;
         
         await _notificationRepository.AddAsync(notification);
@@ -99,7 +99,7 @@ public class NotificationService : INotificationService
                 {
                     { "notificationId", notification.NotificationId.ToString() },
                     { "type", "GENERAL" },
-                    { "timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+                    { "timestamp", DateTimeOffset.UtcNow.AddHours(7).ToUnixTimeSeconds().ToString() }
                 };
                 
                 await _firebaseService.SendNotificationAsync(
@@ -215,7 +215,7 @@ public class NotificationService : INotificationService
             var data = new Dictionary<string, string>
             {
                 { "type", "BROADCAST" },
-                { "timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+                { "timestamp", DateTimeOffset.UtcNow.AddHours(7).ToUnixTimeSeconds().ToString() }
             };
             
             await _firebaseService.SendNotificationToTopicAsync("all_users", title, message, data);
@@ -252,7 +252,7 @@ public class NotificationService : INotificationService
                 { "notificationId", notification.NotificationId.ToString() },
                 { "type", "CART" },
                 { "itemCount", itemCount.ToString() },
-                { "timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+                { "timestamp", DateTimeOffset.UtcNow.AddHours(7).ToUnixTimeSeconds().ToString() }
             };
             
             await _firebaseService.SendNotificationAsync(

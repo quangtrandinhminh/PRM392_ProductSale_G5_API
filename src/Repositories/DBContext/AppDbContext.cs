@@ -52,7 +52,13 @@ public partial class AppDbContext : DbContext
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer(GetConnectionString("DefaultConnection"));
+    {
+        optionsBuilder.UseSqlServer(GetConnectionString("DefaultConnection"));
+        
+        // Disable detailed query logging
+        optionsBuilder.UseLoggerFactory(null);
+        optionsBuilder.EnableSensitiveDataLogging(false);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

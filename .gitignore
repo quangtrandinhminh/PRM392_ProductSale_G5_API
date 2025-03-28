@@ -534,6 +534,7 @@ FodyWeavers.xsd
 *.msp
 
 # Cursor IDE
+.cursor
 .cursorrules
 
 # Environment file
