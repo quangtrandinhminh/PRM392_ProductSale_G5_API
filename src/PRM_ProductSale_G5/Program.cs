@@ -2,6 +2,7 @@ using Microsoft.Extensions.FileProviders;
 using PRM_ProductSale_G5.Extensions;
 using PRM_ProductSale_G5.Hubs;
 using Serilog;
+using Serilog.Events;
 using Services.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,11 +13,31 @@ var builder = WebApplication.CreateBuilder(args);
 DotNetEnv.Env.Load();
 Console.WriteLine($"Environment: {Environment.GetEnvironmentVariable("APP_NAME")}");
 
+// Cấu hình Serilog để loại bỏ logs từ Entity Framework
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Query", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database", LogEventLevel.Warning)
+    .CreateLogger();
+
+// Đăng ký ILogger vào DI container
+builder.Services.AddSingleton(Log.Logger);
+
 builder.Services.AddControllers();
 // add serilog
-builder.Host.UseSerilog((ctx, config) => config.ReadFrom.Configuration(ctx.Configuration));
+builder.Host.UseSerilog();
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddSwaggerDocumentation();
+
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(Log.Logger);
+
+// Thiết lập mức độ log tối thiểu cho Entity Framework Core
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Query", LogLevel.Warning);
 
 var app = builder.Build();
 

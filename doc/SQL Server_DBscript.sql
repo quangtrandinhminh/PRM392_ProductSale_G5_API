@@ -220,3 +220,14 @@ WHERE [UserId] IS NOT NULL;
 
 ALTER TABLE ChatMessages
 ADD IsRead BIT NOT NULL DEFAULT 0;
+
+
+--thêm cột receiverid cho message---
+ALTER TABLE [SalesAppDB].[dbo].[ChatMessages]  
+ADD ReceiverID INT NULL;
+
+ALTER TABLE [SalesAppDB].[dbo].[ChatMessages]  
+ADD CONSTRAINT FK_ChatMessages_Receiver  
+FOREIGN KEY (ReceiverID) REFERENCES [SalesAppDB].[dbo].[Users](UserID);
+
+TRUNCATE TABLE [SalesAppDB].[dbo].[ChatMessages];
