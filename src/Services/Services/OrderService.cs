@@ -106,6 +106,8 @@ public class OrderService(IServiceProvider serviceProvider) : IOrderService
     {
         var loginedUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
         var userId = JwtClaimUltils.GetUserId(loginedUser);
+
+        _logger.Information("Updating order status for OrderId: {OrderId} with {newStatus}", orderId, newStatus);
         var order = await GetOrderById(orderId);
 
         var validStatuses = new List<string> { "Pending", "Paid", "Shipped", "Completed", "Cancelled" };
