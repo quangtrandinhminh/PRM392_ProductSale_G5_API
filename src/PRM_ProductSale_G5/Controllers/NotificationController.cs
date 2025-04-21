@@ -9,6 +9,11 @@ using Services.ApiModels.Notification;
 using Services.ApiModels.PaginatedList;
 using Services.Constants;
 using Services.Services;
+using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ILogger = Serilog.ILogger;
 
 namespace PRM_ProductSale_G5.Controllers
 {
@@ -19,13 +24,18 @@ namespace PRM_ProductSale_G5.Controllers
         private readonly INotificationService _notificationService;
         private readonly IHubContext<NotificationHub> _notificationHubContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IFirebaseService _firebaseService;
+        private readonly IUserDeviceService _userDeviceService;
+        private readonly ILogger _logger;
         
         public NotificationController(IServiceProvider serviceProvider)
         {
             _notificationService = serviceProvider.GetRequiredService<INotificationService>();
             _notificationHubContext = serviceProvider.GetRequiredService<IHubContext<NotificationHub>>();
             _httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-          
+            _firebaseService = serviceProvider.GetRequiredService<IFirebaseService>();
+            _userDeviceService = serviceProvider.GetRequiredService<IUserDeviceService>();
+            _logger = serviceProvider.GetRequiredService<ILogger>();
         }
         
         [HttpGet]
@@ -54,23 +64,88 @@ namespace PRM_ProductSale_G5.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateNotification([FromBody] NotificationCreateRequest request)
         {
+            _logger.Information("Đang tạo thông báo mới cho người dùng {UserId}", request.UserId);
             var notification = await _notificationService.CreateNotificationAsync(request);
             
-            // Gửi thông báo qua SignalR sử dụng connectionId từ mapping
-            if (request.UserId.HasValue)
+            // Thông báo thành công tạo thông báo
+            _logger.Information("Đã tạo thông báo mới: NotificationId={NotificationId}, UserId={UserId}, Message={Message}", 
+                            notification.NotificationId, notification.UserId, notification.Message);
+            
+            await SendNotificationViaSignalR(notification);
+            await SendPushNotificationViaFirebase(notification);
+            
+            return Ok(BaseResponse.OkResponseDto(notification));
+        }
+        
+        [HttpGet]
+        [Route(WebApiEndpoint.Notification.GetBroadcastNotifications)]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetBroadcastNotifications([FromQuery] PaginatedListRequest request)
+        {
+            var broadcastNotifications = await _notificationService.GetBroadcastNotificationsAsync(
+                request.PageNumber, request.PageSize);
+                
+            return Ok(BaseResponse.OkResponseDto(broadcastNotifications));
+        }
+        
+        [HttpPost]
+        [Route(WebApiEndpoint.Notification.SendNotificationToAllUsers)]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SendNotificationToAllUsers([FromBody] SendNotificationToAllRequest request)
+        {
+            _logger.Information("Đang gửi thông báo quảng bá đến tất cả người dùng. Title: {Title}, Message: {Message}", 
+                            request.Title, request.Message);
+            
+            var result = await _notificationService.SendNotificationToAllUsersAsync(request.Message, request.Title);
+            
+            // Thông báo qua SignalR cho tất cả người dùng
+            _logger.Information("Đang gửi thông báo quảng bá qua SignalR");
+            
+            await _notificationHubContext.Clients.All.SendAsync("ReceiveBroadcastNotification", new 
+            { 
+                Title = request.Title, 
+                Message = request.Message, 
+                Timestamp = DateTime.UtcNow.AddHours(7) 
+            });
+            
+            _logger.Information("Đã gửi thông báo quảng bá qua SignalR thành công");
+            
+            // Gửi Firebase Push Notification đến tất cả người dùng (theo chủ đề)
+            try
             {
-                if (NotificationHub._userConnectionMap.TryGetValue(request.UserId.Value, out var connectionId))
+                // Chuẩn bị dữ liệu
+                var data = new Dictionary<string, string>
                 {
-                    Console.WriteLine($"Sending notification to user {request.UserId.Value} with connection ID {connectionId}");
-                    await _notificationHubContext.Clients.Client(connectionId).SendAsync("ReceiveNotification", notification);
+                    { "type", "broadcast" },
+                    { "timestamp", DateTime.UtcNow.AddHours(7).ToString("o") }
+                };
+                
+                _logger.Information("Đang gửi thông báo quảng bá qua Firebase đến chủ đề 'all-users'");
+                
+                // Gửi thông báo đến chủ đề "all-users"
+                var firebaseResult = await _firebaseService.SendNotificationToTopicAsync(
+                    "all-users",
+                    request.Title,
+                    request.Message,
+                    data
+                );
+                
+                if (firebaseResult)
+                {
+                    _logger.Information("Đã gửi thông báo quảng bá qua Firebase thành công");
                 }
                 else
                 {
-                    Console.WriteLine($"User {request.UserId.Value} is not connected to NotificationHub");
+                    _logger.Warning("Gửi thông báo quảng bá qua Firebase thất bại");
                 }
             }
+            catch (Exception ex)
+            {
+                // Log lỗi nhưng không ngăn việc trả về kết quả
+                _logger.Error(ex, "Lỗi khi gửi Firebase broadcast notification: {ErrorMessage}", ex.Message);
+            }
             
-            return Ok(BaseResponse.OkResponseDto(notification));
+            return Ok(BaseResponse.OkResponseDto(result));
         }
         
         [HttpPut]
@@ -127,12 +202,155 @@ namespace PRM_ProductSale_G5.Controllers
             var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
             var currentUserId = JwtClaimUltils.GetUserId(currentUser);
             
+            _logger.Information("Tạo thông báo giỏ hàng cho người dùng {UserId} với số lượng {ItemCount}", currentUserId, itemCount);
+            
             var notification = await _notificationService.CreateCartNotificationAsync(currentUserId, itemCount);
             
-            // Gửi thông báo qua SignalR sử dụng Clients.User
-            await _notificationHubContext.Clients.User(currentUserId.ToString()).SendAsync("ReceiveNotification", notification);
+            _logger.Information("Đã tạo thông báo giỏ hàng: NotificationId={NotificationId}, Message={Message}", 
+                            notification.NotificationId, notification.Message);
+            
+            await SendNotificationViaSignalR(notification);
+            await SendPushNotificationViaFirebase(notification, "CART", itemCount);
             
             return Ok(BaseResponse.OkResponseDto(notification));
+        }
+        
+        /// <summary>
+        /// Gửi thông báo qua SignalR
+        /// </summary>
+        private async Task SendNotificationViaSignalR(NotificationDto notification)
+        {
+            try
+            {
+                if (notification.UserId.HasValue)
+                {
+                    _logger.Information("Đang gửi thông báo SignalR cho người dùng {UserId}, NotificationId: {NotificationId}", 
+                                    notification.UserId.Value, notification.NotificationId);
+                    
+                    // Gửi thông báo qua SignalR sử dụng connectionId từ mapping
+                    if (NotificationHub._userConnectionMap.TryGetValue(notification.UserId.Value, out var connectionId))
+                    {
+                        _logger.Information("Người dùng {UserId} đang kết nối với SignalR, gửi thông báo qua connectionId {ConnectionId}", 
+                                        notification.UserId.Value, connectionId);
+                        
+                        await _notificationHubContext.Clients.Client(connectionId).SendAsync("ReceiveNotification", notification);
+                        
+                        _logger.Information("Đã gửi thông báo SignalR đến connectionId {ConnectionId} thành công", connectionId);
+                    }
+                    else
+                    {
+                        _logger.Warning("Người dùng {UserId} không kết nối với NotificationHub, không thể gửi qua connectionId", 
+                                    notification.UserId.Value);
+                    }
+                    
+                    // Gửi thông báo đến nhóm người dùng
+                    var groupName = $"user_{notification.UserId.Value}_notifications";
+                    _logger.Information("Đang gửi thông báo SignalR đến nhóm {GroupName}", groupName);
+                    
+                    await _notificationHubContext.Clients.Group(groupName).SendAsync("ReceiveNotification", notification);
+                    
+                    _logger.Information("Đã gửi thông báo SignalR đến nhóm {GroupName} thành công", groupName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Lỗi khi gửi thông báo qua SignalR: {ErrorMessage}", ex.Message);
+            }
+        }
+        
+        /// <summary>
+        /// Gửi push notification qua Firebase
+        /// </summary>
+        private async Task SendPushNotificationViaFirebase(NotificationDto notification, string type = "GENERAL", int? itemCount = null)
+        {
+            try
+            {
+                if (!notification.UserId.HasValue)
+                {
+                    _logger.Warning("Không thể gửi push notification vì UserId là null");
+                    return;
+                }
+                
+                // Lấy danh sách thiết bị của người dùng
+                var userDevices = await _userDeviceService.GetUserDevicesAsync(notification.UserId.Value);
+                var deviceList = userDevices.ToList();
+                
+                if (deviceList.Count == 0)
+                {
+                    _logger.Warning("Người dùng {UserId} không có thiết bị nào được đăng ký", notification.UserId.Value);
+                    return;
+                }
+                
+                _logger.Information("Tìm thấy {DeviceCount} thiết bị của người dùng {UserId}", 
+                                deviceList.Count, notification.UserId.Value);
+                
+                // Chuẩn bị dữ liệu thông báo
+                Dictionary<string, string> data;
+                
+                if (type == "CART" && itemCount.HasValue)
+                {
+                    data = Services.Helper.PushNotificationHelper.CreateCartNotificationData(itemCount.Value);
+                    _logger.Information("Đã tạo dữ liệu thông báo giỏ hàng với {ItemCount} mục", itemCount.Value);
+                }
+                else
+                {
+                    data = new Dictionary<string, string>
+                    {
+                        { "notificationId", notification.NotificationId.ToString() },
+                        { "type", type },
+                        { "message", notification.Message },
+                        { "timestamp", DateTimeOffset.UtcNow.AddHours(7).ToUnixTimeSeconds().ToString() }
+                    };
+                    _logger.Information("Đã tạo dữ liệu thông báo chung loại {Type}", type);
+                }
+                
+                // Gửi thông báo đến từng thiết bị của người dùng
+                foreach (var device in deviceList)
+                {
+                    _logger.Information("Đang gửi push notification đến thiết bị {DeviceToken}", 
+                                    device.DeviceToken.Substring(0, Math.Min(10, device.DeviceToken.Length)) + "...");
+                    
+                    var result = await _firebaseService.SendNotificationAsync(
+                        device.DeviceToken,
+                        "Thông báo mới",
+                        notification.Message,
+                        data
+                    );
+                    
+                    if (result)
+                    {
+                        _logger.Information("Đã gửi push notification thành công đến thiết bị {DeviceId}", device.UserDeviceId);
+                    }
+                    else
+                    {
+                        _logger.Warning("Không thể gửi push notification đến thiết bị {DeviceId}", device.UserDeviceId);
+                    }
+                }
+                
+                // Gửi thông báo đến chủ đề riêng của người dùng
+                var userTopic = $"user-{notification.UserId.Value}";
+                _logger.Information("Đang gửi push notification đến chủ đề {Topic}", userTopic);
+                
+                var topicResult = await _firebaseService.SendNotificationToTopicAsync(
+                    userTopic,
+                    "Thông báo mới",
+                    notification.Message,
+                    data
+                );
+                
+                if (topicResult)
+                {
+                    _logger.Information("Đã gửi push notification thành công đến chủ đề {Topic}", userTopic);
+                }
+                else
+                {
+                    _logger.Warning("Không thể gửi push notification đến chủ đề {Topic}", userTopic);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Lỗi khi gửi push notification qua Firebase: {ErrorMessage}", ex.Message);
+            }
         }
     }
 }

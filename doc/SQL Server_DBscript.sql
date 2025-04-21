@@ -1,4 +1,10 @@
 -- Tạo database
+USE master;
+
+IF EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'SalesAppDB')
+    DROP DATABASE SalesAppDB;
+GO
+
 CREATE DATABASE SalesAppDB;
 GO
 
@@ -120,16 +126,8 @@ use SalesAppDB
 -- Insert sample data into Users
 INSERT INTO Users (Username, PasswordHash, Email, PhoneNumber, Address, Role)
 VALUES
-('john_doe', 'hashedpassword1', 'john@example.com', '1234567890', '123 Main St', 'Customer'),
-('jane_smith', 'hashedpassword2', 'jane@example.com', '0987654321', '456 Market St', 'Customer'),
-('admin', 'hashedpassword3', 'admin@example.com', '1122334455', 'Admin HQ', 'Admin'),
-('alice_johnson', 'hashedpassword4', 'alice@example.com', '2233445566', '789 Elm St', 'Customer'),
-('bob_miller', 'hashedpassword5', 'bob@example.com', '3344556677', '101 Oak St', 'Customer'),
-('charlie_wilson', 'hashedpassword6', 'charlie@example.com', '4455667788', '202 Pine St', 'Customer'),
-('david_clark', 'hashedpassword7', 'david@example.com', '5566778899', '303 Maple St', 'Customer'),
-('eva_lee', 'hashedpassword8', 'eva@example.com', '6677889900', '404 Cedar St', 'Customer'),
-('frank_hall', 'hashedpassword9', 'frank@example.com', '7788990011', '505 Birch St', 'Customer'),
-('grace_white', 'hashedpassword10', 'grace@example.com', '8899001122', '606 Spruce St', 'Customer');
+('imadmin', '$2a$12$ZaFmQWz3JOBrko3ZKmLZ7u3AuS9m1DSGSWQ.pMNDv5fXGCHdbxviG', 'john@example.com', '1234567890', '123 Main St', 'Admin'),
+('imcustomer', '$2a$12$T/Mb68jp.voF62cDC2uWp.p0P8AFmkdTXVsxg7boCj97yjkt3zN1C', 'jane@example.com', '0987654321', '456 Market St', 'Customer')
 
 -- Insert sample data into Categories
 INSERT INTO Categories (CategoryName)
@@ -145,62 +143,24 @@ VALUES
 ( 'Printers'),
 ( 'Keyboards');
 
--- Insert sample data into Products
-INSERT INTO Products (ProductName, BriefDescription, FullDescription, TechnicalSpecifications, Price, ImageURL, CategoryID)
+INSERT INTO Products 
+(ProductName, BriefDescription, FullDescription, TechnicalSpecifications, Price, ImageURL, CategoryID)
 VALUES
-( 'MacBook Pro', 'Apple Laptop', 'High performance laptop by Apple', '16GB RAM, 512GB SSD', 2000, 'macbook.jpg', 1),
-('iPhone 14', 'Apple Smartphone', 'Latest iPhone model', '128GB Storage, A15 Bionic', 999, 'iphone.jpg', 2),
-( 'iPad Air', 'Apple Tablet', 'Lightweight and powerful', '10.9-inch, A14 Bionic', 699, 'ipadair.jpg', 3),
-( 'Wireless Mouse', 'Accessory', 'Ergonomic wireless mouse', 'Bluetooth connectivity', 50, 'mouse.jpg', 4),
-( 'AirPods Pro', 'Wireless Earbuds', 'Noise cancelling earbuds', 'Bluetooth 5.0', 249, 'airpods.jpg', 5),
-( 'PlayStation 5', 'Gaming Console', 'Latest Sony gaming console', 'Ultra HD, SSD storage', 499, 'ps5.jpg', 6),
-( 'Apple Watch', 'Smartwatch', 'Health and fitness smartwatch', 'GPS, Heart Rate Monitor', 399, 'watch.jpg', 7),
-( 'Dell Monitor', 'Computer Monitor', '27-inch LED Monitor', 'Full HD, 144Hz', 299, 'monitor.jpg', 8),
-( 'HP Laser Printer', 'Laser Printer', 'Fast and high-quality printing', 'Wireless, Duplex', 199, 'printer.jpg', 9),
-( 'Mechanical Keyboard', 'Mechanical Gaming Keyboard', 'RGB backlit keys', 'USB, Mechanical switches', 129, 'keyboard.jpg', 10);
+('MacBook Pro', 'Apple Laptop', 'High performance laptop by Apple', '16GB RAM, 512GB SSD', 20000000.00, 'https://minhtuanmobile.com/uploads/products/m4-250206040356.png', 1),
+('iPhone 14', 'Apple Smartphone', 'Latest iPhone model', '128GB Storage, A15 Bionic', 19000000.00, 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQWcUaJZQBvGvFQISKE1YTcIwt4UxPuSHThH0-L9peVsDn0e9T3TnbMX7RRANJ88_4oXKclnTD4MSGMKradiomFm4hNntmS5xn3JiieprJEGozMKnALAuucixk0Y0ac5FYAUpoN&usqp=CAc', 2),
+('iPad Air', 'Apple Tablet', 'Lightweight and powerful', '10.9-inch, A14 Bionic', 18000000.00, 'https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcSfLV_AXHWgC1R3NDaErniKQ92u4hft3bX03FGeX50Jt3__CZU-g237wLpUnsmIbxf5MJG0AqzFKaCCCNtc969Lxd-g0riUZuGC0XMmpBPixV3oNQcuItE2nqqNzQxjo-0RhTcf&usqp=CAc', 3),
+('Wireless Mouse', 'Accessory', 'Ergonomic wireless mouse', 'Bluetooth connectivity', 769000.00, 'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcTabKl47dzTMiyuMRRId_P2JOwukEDF929brcX5t8G0cakKC5BLEHF2qwzEa7ByLhra4YRkgf8RDoVRMqG1MBahP5Tip2iUZ-7L3yRF_7O8pJGDIrqZWikkvFXjhiuCXNzOcg&usqp=CAc', 4),
+('AirPods Pro', 'Wireless Earbuds', 'Noise cancelling earbuds', 'Bluetooth 5.0', 5000000.00, 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcTxUJeb_iVfT_5akua1XWP_JwS6FqXjz5wbRZF3q--O9Q1lE5OPmBbr4O5IxXTgYxbzeCB6ZkrtQa20wJBk-w810AtQaIySvoXIKPWIGEfM_HN3J8UeW2TVr2VCWbOXXA46&usqp=CAc', 5),
+('PlayStation 5', 'Gaming Console', 'Latest Sony gaming console', 'Ultra HD, SSD storage', 13000000.00, 'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcQVfXpc0i0zI06aoSobo-_B4lLShTwyv36LcyneB0QQFb3RKhDet_r0uV4bq3QXb10eP0NLjJAKN5v34UVafrnEkOGxtSIWRbi6lbKn8w4nQWhtggtrf8kSf-2ebQnBceS4Dw&usqp=CAc', 6),
+('Apple Watch', 'Smartwatch', 'Health and fitness smartwatch', 'GPS, Heart Rate Monitor', 8600000.00, 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRT1E-q9yyXBX9qn-dBfUhr_SggM0idafRx5fets2_XP5lcpch55-hJP9SNNb8nbtqCedzG6uYA0Yu2GaH8El7YULXZfjKnEsDkDm3XQKZZX_QxekYL0J5KMyv7dVhuk41y&usqp=CAc', 7),
+('Dell Monitor', 'Computer Monitor', '27-inch LED Monitor', 'Full HD, 144Hz', 4999000.00, 'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcTUNZmdSDNIwWzVYR5_5F5SRa1rcHgY_6KPrEV0SK25l2Y_tes-S348hK1hbLY5ifuCW9ru99yYEArAtwz2BLMxXR8FsB9fWBXpqwn46v5R3sf4J7bd7oGDN-0vAacHd5W1jw&usqp=CAc', 8),
+('HP Laser Printer', 'Laser Printer', 'Fast and high-quality printing', 'Wireless, Duplex', 2700000.00, 'https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcShzBzEIjjAY-H6ODrnp-LU6PCr6WfS5N8LdAULNHs7tpRD714fpo05zaysHMQtK3z4HAYHwMvLPzLoCsFw7PdIv3pgMIvA2sPG7YaADLN5ZZD22eGeaAgD7n5K8NGgEnT3&usqp=CAc', 9),
+('Mechanical Keyboard', 'Mechanical Gaming Keyboard', 'RGB backlit keys', 'USB, Mechanical switches', 2500000.00, 'https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcQKngWYjxZIwBPkUFcqdTgj_V_KH701jFFXTimgKX8vpsRn_JlBrdmwm8NjmRFQu3VnfmuzzJZBxmX1dGJ-WouCanBIVs76t-groXooo6caKuR6uenmHwip_4yl_0RlrUK9Ng&usqp=CAc', 10);
 
--- Insert sample data into Carts
-INSERT INTO Carts ( UserID, TotalPrice, Status)
+INSERT INTO [dbo].[StoreLocations]
+(Latitude, Longitude, Address)
 VALUES
-( 1, 2999, 'Pending'),
-( 2, 749, 'Pending'),
-( 3, 249, 'Completed'),
-( 4, 999, 'Pending'),
-( 5, 129, 'Completed'),
-( 6, 699, 'Pending'),
-( 7, 499, 'Completed'),
-( 8, 50, 'Pending'),
-( 9, 399, 'Pending'),
-( 10, 299, 'Completed');
-
--- Insert sample data into CartItems
-INSERT INTO CartItems ( CartID, ProductID, Quantity, Price)
-VALUES
-( 1, 1, 1, 2000),
-( 1, 2, 1, 999),
-( 2, 3, 1, 699),
-( 2, 4, 1, 50),
-( 3, 5, 1, 249),
-( 4, 6, 1, 999),
-( 5, 10, 1, 129),
-( 6, 3, 1, 699),
-( 7, 6, 1, 499),
-( 8, 4, 1, 50);
-
--- Insert sample data into Orders
-INSERT INTO Orders ( CartID, UserID, PaymentMethod, BillingAddress, OrderStatus, OrderDate)
-VALUES
-( 1, 1, 'Credit Card', '123 Main St', 'Processing', GETDATE()),
-( 2, 2, 'PayPal', '456 Market St', 'Shipped', GETDATE()),
-( 3, 3, 'Credit Card', '789 Elm St', 'Delivered', GETDATE()),
-( 4, 4, 'Debit Card', '101 Oak St', 'Processing', GETDATE()),
-( 5, 5, 'PayPal', '303 Maple St', 'Shipped', GETDATE()),
-( 6, 6, 'Credit Card', '404 Cedar St', 'Pending', GETDATE()),
-( 7, 7, 'Debit Card', '505 Birch St', 'Processing', GETDATE()),
-( 8, 8, 'Credit Card', '606 Spruce St', 'Shipped', GETDATE()),
-( 9, 9, 'PayPal', '707 Willow St', 'Pending', GETDATE()),
-( 10, 10, 'Debit Card', '808 Redwood St', 'Delivered', GETDATE());
-
+(10.842287, 106.801944, 'Lô E2a-7, Đường D1, Khu Công nghệ cao, Long Thạnh Mỹ, TP. Thủ Đức, TP. Hồ Chí Minh.');
 
 -- Tạo bảng UserDevices để lưu thông tin thiết bị của người dùng
 CREATE TABLE [dbo].[UserDevices] (
@@ -220,3 +180,14 @@ WHERE [UserId] IS NOT NULL;
 
 ALTER TABLE ChatMessages
 ADD IsRead BIT NOT NULL DEFAULT 0;
+
+
+--thêm cột receiverid cho message---
+ALTER TABLE [SalesAppDB].[dbo].[ChatMessages]  
+ADD ReceiverID INT NULL;
+
+ALTER TABLE [SalesAppDB].[dbo].[ChatMessages]  
+ADD CONSTRAINT FK_ChatMessages_Receiver  
+FOREIGN KEY (ReceiverID) REFERENCES [SalesAppDB].[dbo].[Users](UserID);
+
+TRUNCATE TABLE [SalesAppDB].[dbo].[ChatMessages];

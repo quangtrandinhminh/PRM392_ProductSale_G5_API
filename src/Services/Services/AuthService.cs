@@ -18,6 +18,7 @@ public interface IAuthService
 {
     Task<string> Authenticate(LoginRequest request);
     Task Register(RegisterRequest request);
+    Task<int> GetAdminIdAsync();
 }
 
 public class AuthService(IServiceProvider serviceProvider) : IAuthService
@@ -41,6 +42,18 @@ public class AuthService(IServiceProvider serviceProvider) : IAuthService
             throw new AppException(ErrorCode.UserPasswordWrong, ResponseMessageIdentity.PASSWORD_WRONG, StatusCodes.Status401Unauthorized);
 
         return await GenerateJwtToken(user, 24);
+    }
+
+    public async Task<int> GetAdminIdAsync()
+    {
+        _logger.Information("Getting first admin user id");
+        var adminUser = await _authRepository.GetSingleAsync(x => x.Role == UserRoleEnum.Admin.ToString());
+        if (adminUser == null)
+        {
+            throw new AppException(ResponseCodeConstants.BAD_REQUEST,
+                "Không tìm thấy tài khoản admin nào", StatusCodes.Status404NotFound);
+        }
+        return adminUser.UserId;
     }
 
     public async Task Register(RegisterRequest request)

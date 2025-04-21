@@ -41,7 +41,7 @@ public class UserDeviceService : IUserDeviceService
                 existingDevice.UserId = userId;
             }
             
-            existingDevice.LastUsed = DateTime.UtcNow;
+            existingDevice.LastUsed = DateTime.UtcNow.AddHours(7);
             _userDeviceRepository.Update(existingDevice);
             await _userDeviceRepository.SaveChangeAsync();
             
@@ -54,7 +54,7 @@ public class UserDeviceService : IUserDeviceService
             UserId = userId,
             DeviceToken = request.DeviceToken,
             DeviceType = request.DeviceType,
-            LastUsed = DateTime.UtcNow
+            LastUsed = DateTime.UtcNow.AddHours(7)
         };
         
         await _userDeviceRepository.AddAsync(userDevice);

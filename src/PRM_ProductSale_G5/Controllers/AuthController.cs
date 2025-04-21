@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Services.ApiModels;
 using Services.ApiModels.User;
 using Services.Constants;
@@ -15,6 +16,13 @@ namespace PRM_ProductSale_G5.Controllers
         public IActionResult Hello()
         {
             return Ok(BaseResponse.OkResponseDto("Hello"));
+        }
+
+        [HttpGet(WebApiEndpoint.Authentication.GetAdminId)]
+        [Authorize]
+        public async Task<IActionResult> GetAdminId()
+        {
+            return Ok(BaseResponse.OkResponseDto(await service.GetAdminIdAsync()));
         }
 
         [HttpPost(WebApiEndpoint.Authentication.Login)]

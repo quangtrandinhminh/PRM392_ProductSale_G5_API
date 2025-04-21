@@ -10,7 +10,9 @@ namespace Services.ApiModels.Cart
 {
     public class UpdateCartRequest
     {
-        public int CartId { get; set; }
-        public IList<CartItemRequest> CartItems { get; set; } = new List<CartItemRequest>();
+        public int CartItemId { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public int Quantity { get; set; }
     }
 }
