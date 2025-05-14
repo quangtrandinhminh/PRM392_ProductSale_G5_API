@@ -15,6 +15,16 @@ public class JwtClaimUltils
         return int.Parse(userClaimsPrincipal.FindFirst(ClaimTypes.Sid)?.Value);
     }
 
+    /*public static string GetUserId(ClaimsPrincipal userClaimsPrincipal)
+    {
+        return userClaimsPrincipal.FindFirst(ClaimTypes.Sid)?.Value;
+    }*/
+
+    public static string GetUserName(ClaimsPrincipal userClaimsPrincipal)
+    {
+        return userClaimsPrincipal.FindFirst(ClaimTypes.Name)?.Value;
+    }
+
     public static IList<string> GetUserRole(ClaimsPrincipal userClaimsPrincipal)
     {
         return userClaimsPrincipal.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList();

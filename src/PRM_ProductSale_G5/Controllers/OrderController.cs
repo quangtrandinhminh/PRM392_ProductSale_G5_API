@@ -54,7 +54,7 @@ namespace PRM_ProductSale_G5.Controllers
             await SendOrderNotification(
                 result.OrderId, 
                 userId, 
-                "Đơn hàng mới của bạn đã được tạo và đang chờ xử lý"
+                $"Đơn hàng {result.OrderId} của bạn đã được tạo và đang chờ xử lý"
             );
             
             return Ok(BaseResponse.OkResponseDto(result));
@@ -91,7 +91,7 @@ namespace PRM_ProductSale_G5.Controllers
                 await SendOrderNotification(
                     orderId,
                     order.UserId.Value,
-                    $"Trạng thái đơn hàng của bạn đã được cập nhật thành {newStatus}"
+                    $"Trạng thái đơn hàng {orderId} của bạn đã được cập nhật thành {newStatus}"
                 );
             }
             

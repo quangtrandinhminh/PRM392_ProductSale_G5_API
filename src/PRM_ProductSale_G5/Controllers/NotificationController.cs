@@ -68,7 +68,7 @@ namespace PRM_ProductSale_G5.Controllers
             var notification = await _notificationService.CreateNotificationAsync(request);
             
             // Thông báo thành công tạo thông báo
-            _logger.Information("Đã tạo thông báo mới: NotificationId={NotificationId}, UserId={UserId}, Message={Message}", 
+            _logger.Information("New notification created: NotificationId={NotificationId}, UserId={UserId}, Message={Message}", 
                             notification.NotificationId, notification.UserId, notification.Message);
             
             await SendNotificationViaSignalR(notification);

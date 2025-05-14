@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #response { border: 1px solid #ccc; padding: 10px; margin-top: 10px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Test API Requests</h1>
+    
+    <h2>POST Request - Authentication</h2>
+    <label for="authBody">Auth Body (JSON):</label><br>
+    <textarea id="authBody" rows="5" cols="50">{"username": "sysadmin", "password": "12345678"}</textarea><br><br>
+    <button onclick="sendAuthRequest()">Send Auth Request</button>
+    
+    </br>
+    </br>
+    <label for="apiToken">Authorization Token:</label>
+    <input type="text" id="apiToken" value="" size="50"><br><br>
+
+    <h2>GET Request - Broadcasts</h2>
+    <button onclick="sendGetRequest()">Send GET Request</button>
+    
+    <h2>POST Request - Send to All</h2>
+    <label for="postBody">POST Body (JSON):</label><br>
+    <textarea id="postBody" rows="5" cols="50">{"message": "string", "title": "string"}</textarea><br><br>
+    <button onclick="sendPostRequest()">Send POST Request</button>
+    
+    <h2>Response:</h2>
+    <div id="response"></div>
+
+    <script>
+        async function sendAuthRequest() {
+            const url = 'http://localhost:5288/api/auth/authentication';
+            const body = document.getElementById('authBody').value;
+            const responseDiv = document.getElementById('response');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: body
+                });
+                
+                const data = await response.json();
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function sendGetRequest() {
+            const url = 'http://localhost:5288/api/notifications/broadcasts';
+            const token = document.getElementById('apiToken').value;
+            const responseDiv = document.getElementById('response');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    }
+                });
+                
+                const data = await response.json();
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function sendPostRequest() {
+            const url = 'http://localhost:5288/api/notifications/send-to-all';
+            const token = document.getElementById('apiToken').value;
+            const body = document.getElementById('postBody').value;
+            const responseDiv = document.getElementById('response');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    },
+                    body: body
+                });
+                
+                const data = await response.json();
+                responseDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
