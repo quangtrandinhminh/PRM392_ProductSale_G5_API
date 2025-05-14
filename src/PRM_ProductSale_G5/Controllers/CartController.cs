@@ -49,29 +49,12 @@ namespace PRM_ProductSale_G5.Controllers
         }
 
 
-        /*[HttpDelete]
-        [Route("DeleteCartItem")]
-        public async Task<IActionResult> DeleteCartItem([FromQuery] int productId)
+        [HttpDelete]
+        [Route(WebApiEndpoint.Cart.DeleteCart)]
+        public async Task<IActionResult> DeleteCartItem([FromRoute] int cartItemId)
         {
-            var currentUser = JwtClaimUltils.GetLoginedUser(_httpContextAccessor);
-            var currentUserId = JwtClaimUltils.GetUserId(currentUser);
-
-            // Ensure user is authenticated
-            if (currentUserId <= 0)
-            {
-                return Unauthorized(BaseResponse.BadRequestResponseDto("User not authenticated"));
-            }
-
-            // Validate productId
-            if (productId <= 0)
-            {
-                return BadRequest(BaseResponse.BadRequestResponseDto("Invalid product ID"));
-            }
-
-            // Call service to delete the cart item
-            var result = await _cartService.DeleteCartItemAsync(currentUserId, productId);
+            var result = await _cartService.DeleteCartItemAsync(cartItemId);
             return Ok(BaseResponse.OkResponseDto(result));
-        }*/
-
+        }
     }
 }

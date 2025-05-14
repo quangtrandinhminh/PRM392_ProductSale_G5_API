@@ -1,4 +1,4 @@
-﻿namespace Services.Constants
+namespace Services.Constants
 {
     public static class WebApiEndpoint
     {
@@ -10,6 +10,7 @@
             public const string Hello = BaseEndpoint + "/hello";
             public const string Register = BaseEndpoint + "/register";
             public const string Login = BaseEndpoint + "/authentication";
+            public const string GetAdminId = BaseEndpoint + "/admin-id";
         }
 
         public static class User
@@ -30,6 +31,7 @@
             public const string CreateProduct = BaseEndpoint;
             public const string UpdateProduct = BaseEndpoint;
             public const string DeleteProduct = BaseEndpoint + "/{id}";
+            public const string Search = BaseEndpoint + "/search";
         }
 
         public static class Category
@@ -49,8 +51,9 @@
             public const string GetOrder = BaseEndpoint + "/{orderId}";
             public const string CreateOrder = BaseEndpoint;
             public const string DeleteOrder = BaseEndpoint + "/{orderId}";
-            public const string GetOrdersByUser = BaseEndpoint + "/user/{userId}";
-            public const string UpdateOrderStatus = BaseEndpoint + "/{id}/status";
+            public const string GetOrdersByUser = BaseEndpoint + "/user/status";
+            public const string UpdateOrderStatus = BaseEndpoint + "/{orderId}/newStatus";
+            public const string GetOrdersByStatus = BaseEndpoint + "/status";
             public const string CustomerChangeOrderStatus = BaseEndpoint + "customer/{orderId}";
             public const string AdminChangeOrderStatus = BaseEndpoint + "admin/{orderId}";
             public const string CustomerCancelOrder = BaseEndpoint + "customer/{orderId}";
@@ -60,20 +63,9 @@
         {
             private const string BaseEndpoint = "~/" + AreaName + "/cart";
             public const string GetCarts = BaseEndpoint;
-            public const string GetCart = BaseEndpoint + "/{cartId}";
-            public const string AddToCart = BaseEndpoint;
-            public const string UpdateCart = BaseEndpoint;
-            public const string DeleteCart = BaseEndpoint + "/{cartId}";
-        }
-
-        public static class CartItem
-        {
-            private const string BaseEndpoint = "~/" + AreaName + "/cartItem";
-            public const string GetCartItems = BaseEndpoint;
-            public const string GetCartItem = BaseEndpoint + "/{id}";
-            public const string CreateCartItem = BaseEndpoint;
-            public const string UpdateCartItem = BaseEndpoint;
-            public const string DeleteCartItem = BaseEndpoint + "/{id}";
+            public const string AddToCart = BaseEndpoint + "/cartItem";
+            public const string UpdateCart = BaseEndpoint + "/cartItem";
+            public const string DeleteCart = BaseEndpoint + "/cartItem/{cartItemId}";
         }
 
         public static class ProductCategory
@@ -108,6 +100,8 @@
             public const string DeleteChatMessage = $"{Prefix}/{{id}}";
             public const string GetUnreadCount = $"{Prefix}/unread-count";
             public const string MarkAsRead = $"{Prefix}/{{id}}/read";
+            public const string GetConversationInfo = $"{Prefix}/conversation-info/{{otherUserId}}";
+            public const string GetConversationList = $"{Prefix}/conversations";
         }
 
         public static class Notification
@@ -123,6 +117,8 @@
             public const string MarkAsRead = $"{Prefix}/{{id}}/read";
             public const string MarkAllAsRead = $"{Prefix}/read-all";
             public const string CreateCartNotification = $"{Prefix}/cart";
+            public const string SendNotificationToAllUsers = $"{Prefix}/send-to-all";
+            public const string GetBroadcastNotifications = $"{Prefix}/broadcasts";
         }
 
         public static class Payment
@@ -139,6 +135,15 @@
             public const string RegisterDevice = $"{Prefix}/register";
             public const string UnregisterDevice = $"{Prefix}/unregister";
             public const string GetUserDevices = Prefix;
+        }
+
+        public static class StoreLocation
+        {
+            private const string BaseEndpoint = "~/" + AreaName + "/store-location";
+            public const string GetStoreLocations = BaseEndpoint;
+            public const string CreateStoreLocation = BaseEndpoint;
+            public const string UpdateStoreLocation = BaseEndpoint;
+            public const string DeleteStoreLocation = BaseEndpoint + "/{id}";
         }
     }
 }

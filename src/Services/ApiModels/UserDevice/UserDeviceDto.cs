@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace Services.ApiModels.UserDevice;
 
@@ -9,6 +10,12 @@ public class UserDeviceDto
     public string DeviceToken { get; set; }
     public string DeviceType { get; set; }
     public DateTime LastUsed { get; set; }
+}
+
+public class UserDeviceListDto
+{
+    public List<UserDeviceDto> Devices { get; set; } = new List<UserDeviceDto>();
+    public int Count => Devices.Count;
 }
 
 public class UserDeviceRegisterRequest

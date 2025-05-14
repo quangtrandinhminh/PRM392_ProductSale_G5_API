@@ -161,6 +161,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserDeviceRepository, UserDeviceRepository>();
         services.AddScoped<IUserDeviceService, UserDeviceService>();
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IStoreLocationService, StoreLocationService>();
 
         // Register repositories
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -173,6 +174,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICartItemRepository, CartItemRepository>();
+        services.AddScoped<IStoreLocationRepository, StoreLocationRepository>();
     }
 
     private static string GetEnvironmentVariableOrThrow(string key)

@@ -29,3 +29,19 @@ public class NotificationUpdateRequest
     [Required]
     public string Message { get; set; }
 }
+
+public class SendNotificationToAllRequest
+{
+    [Required]
+    public string Message { get; set; }
+    
+    public string Title { get; set; } = "Thông báo mới";
+}
+
+public class BroadcastNotificationDto
+{
+    public string Message { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int RecipientCount { get; set; }
+    public List<NotificationDto> NotificationInstances { get; set; }
+}

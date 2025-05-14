@@ -13,7 +13,7 @@ public static class MiddlewareExtensions
         app.UseCors("_myAllowSpecificOrigins");
 
         // HTTPS redirection
-        app.UseHttpsRedirection();
+        //app.UseHttpsRedirection();
 
         // Authentication and Authorization
         app.UseAuthentication();

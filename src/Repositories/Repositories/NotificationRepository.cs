@@ -12,6 +12,7 @@ public interface INotificationRepository : IGenericRepository<Notification>
     Task<int> GetUnreadCountAsync(int userId);
     Task<bool> MarkAsReadAsync(int notificationId);
     Task<bool> MarkAllAsReadAsync(int userId);
+    Task<PaginatedList<BroadcastNotification>> GetBroadcastNotificationsAsync(int pageNumber, int pageSize);
 }
 
 public class NotificationRepository : GenericRepository<Notification>, INotificationRepository
@@ -57,9 +58,37 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
     
     public async Task<bool> MarkAllAsReadAsync(int userId)
     {
-        var result = await _context.Database.ExecuteSqlRawAsync(
-            "UPDATE Notifications SET IsRead = 1 WHERE UserId = {0} AND IsRead = 0", userId);
+        var unreadNotifications = await _context.Notifications
+            .AsTracking()
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .ToListAsync();
+            
+        if (unreadNotifications.Count == 0) return true;
         
-        return result > 0;
+        foreach (var notification in unreadNotifications)
+        {
+            notification.IsRead = true;
+            _context.Entry(notification).State = EntityState.Modified;
+        }
+        
+        await _context.SaveChangesAsync();
+        return true;
+    }
+    
+    public async Task<PaginatedList<BroadcastNotification>> GetBroadcastNotificationsAsync(int pageNumber, int pageSize)
+    {
+        // Nhóm các thông báo có cùng nội dung và thời gian tạo (với độ chênh lệch nhỏ)
+        var query = _context.Notifications
+            .GroupBy(n => new { n.Message, Year = n.CreatedAt.Year, Month = n.CreatedAt.Month, Day = n.CreatedAt.Day, Hour = n.CreatedAt.Hour, Minute = n.CreatedAt.Minute })
+            .Select(g => new BroadcastNotification
+            {
+                Message = g.Key.Message,
+                CreatedAt = g.Min(n => n.CreatedAt),
+                RecipientCount = g.Count(),
+                NotificationInstances = g.ToList()
+            })
+            .OrderByDescending(b => b.CreatedAt);
+            
+        return await PaginatedList<BroadcastNotification>.CreateAsync(query, pageNumber, pageSize);
     }
 }

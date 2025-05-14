@@ -8,7 +8,7 @@ public static class PushNotificationHelper
         {
             { "type", "CART" },
             { "itemCount", itemCount.ToString() },
-            { "timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+            { "timestamp", DateTimeOffset.UtcNow.AddHours(7).ToUnixTimeSeconds().ToString() }
         };
     }
     
@@ -20,18 +20,18 @@ public static class PushNotificationHelper
             { "chatMessageId", chatMessageId.ToString() },
             { "userId", userId.ToString() },
             { "message", message },
-            { "timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+            { "timestamp", DateTimeOffset.UtcNow.AddHours(7).ToUnixTimeSeconds().ToString() }
         };
     }
     
-    public static Dictionary<string, string> CreateOrderNotificationData(int orderId, string status)
+    public static Dictionary<string, string> CreateOrderNotificationData(int orderId, string message)
     {
         return new Dictionary<string, string>
         {
             { "type", "ORDER" },
             { "orderId", orderId.ToString() },
-            { "status", status },
-            { "timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() }
+            { "message", message },
+            { "timestamp", DateTimeOffset.UtcNow.AddHours(7).ToUnixTimeSeconds().ToString() }
         };
     }
 }
